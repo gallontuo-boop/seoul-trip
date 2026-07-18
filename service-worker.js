@@ -1,5 +1,5 @@
-/* 首爾同行 — offline app shell */
-const CACHE = 'seoul-trip-v1';
+/* 首爾同行 — offline app shell (network-first for HTML) */
+const CACHE = 'seoul-trip-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -15,28 +15,46 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  // Always go to network for the live exchange-rate API (never cache stale rates)
+  const req = e.request;
+  const url = new URL(req.url);
+
+  // Live exchange-rate API: always go to network, never cache
   if (url.hostname.includes('er-api.com')) return;
 
-  // App shell: cache-first, fall back to network, then cache the response
-  e.respondWith(
-    caches.match(e.request).then(hit => {
-      if (hit) return hit;
-      return fetch(e.request).then(res => {
-        if (res && res.status === 200 && e.request.method === 'GET' && url.origin === location.origin) {
+  const isHTML = req.mode === 'navigate'
+    || req.destination === 'document'
+    || url.pathname.endsWith('.html')
+    || url.pathname.endsWith('/');
+
+  if (isHTML) {
+    // Network-first: always try to fetch the latest page, fall back to cache offline
+    e.respondWith(
+      fetch(req)
+        .then(res => {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => caches.match('./index.html'));
-    })
+          caches.open(CACHE).then(c => c.put('./index.html', copy));
+          return res;
+        })
+        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+    );
+    return;
+  }
+
+  // Other assets (icons, manifest): cache-first
+  e.respondWith(
+    caches.match(req).then(hit => hit || fetch(req).then(res => {
+      if (res && res.status === 200 && req.method === 'GET' && url.origin === location.origin) {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+      }
+      return res;
+    }).catch(() => caches.match('./index.html')))
   );
 });
