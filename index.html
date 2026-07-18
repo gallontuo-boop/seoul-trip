@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="首爾同行">
 <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<script src="vendor/leaflet.js" defer></script>
 <script>
 (function(){
   try{
@@ -143,6 +145,17 @@ nav{
 .day-head .dh-k{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cobalt);font-weight:700;text-transform:uppercase}
 .day-head .dh-t{font-family:var(--disp);font-weight:900;font-size:23px;letter-spacing:-.01em;margin-top:1px}
 .day-head .dh-s{color:var(--ink2);font-size:13px;margin-top:3px}
+
+/* daily route mini-map */
+.day-map{height:192px;border-radius:14px;border:1px solid var(--line);margin:14px 0 2px;overflow:hidden;box-shadow:var(--sh);background:var(--paper2);display:none}
+.day-map.on{display:block}
+.day-map .leaflet-container{height:100%;width:100%;background:var(--paper2);font-family:var(--sans)}
+html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.88) contrast(.9) saturate(.7)}
+.day-map .leaflet-control-attribution{font-size:9px;background:color-mix(in srgb,var(--card) 75%,transparent);color:var(--ink3)}
+.day-map .leaflet-control-attribution a{color:var(--ink3)}
+.day-map .leaflet-popup-content-wrapper{background:var(--card);color:var(--ink);border-radius:10px;box-shadow:var(--sh2)}
+.day-map .leaflet-popup-content{margin:8px 12px;font-size:12.5px;font-weight:600}
+.day-map .leaflet-popup-tip{background:var(--card)}
 
 /* subway-line timeline */
 .line{position:relative;margin:16px 0 4px;padding-left:4px}
@@ -619,46 +632,46 @@ function artBanner(key, placeName){
 const DAYS = [
  {d:'8/7', wk:'五', key:'DAY 01', title:'明洞快閃 · 靈魂音樂', sub:'抵達即開場：換錢補貨、脊骨湯暖胃,直衝梨泰院夜生活。',
   stops:[
-   {t:'12:50', cat:'logi', title:'抵達金浦機場', place:'Gimpo Intl. GMP', note:'落地後領行李、辦交通卡,準備搭地鐵進市區。', map:'김포국제공항'},
-   {t:'14:00', cat:'logi', title:'Ibis 仁寺洞 Check-in', place:'地鐵 5 號線 · 仁寺洞', note:'放好行李、輕裝出門。', map:'ibis Ambassador Seoul Insadong'},
-   {t:'15:00', end:'18:00', cat:'shop', title:'明洞換錢 + Olive Young', place:'明洞 · 大使館換錢所', note:'先在「大使館換錢所」換韓幣,再到 Olive Young 地毯式補貨美妝、面膜、零食。', map:'명동 대사관환전소'},
-   {t:'18:30', end:'20:00', cat:'food', title:'元堂脊骨馬鈴薯湯', place:'明洞店', note:'湯頭濃郁,長途飛行後最適合恢復體力的一鍋。', map:'원당 감자탕 명동'},
-   {t:'22:00', end:'24:00', cat:'night', title:'HYDE Seoul', place:'精緻酒吧', note:'調酒風格時尚,適合開場暖身、慢慢進入夜的節奏。', map:'HYDE bar Seoul'},
-   {t:'00:00', end:'03:00', cat:'night', title:'Club GYM', place:'梨泰院 Itaewon', note:'梨泰院最夯俱樂部之一,感受首爾頂級夜生活。財物請貼身。', map:'Club GYM Itaewon'},
+   {t:'12:50', cat:'logi', title:'抵達金浦機場', ll:[37.5586,126.7944], place:'Gimpo Intl. GMP', note:'落地後領行李、辦交通卡,準備搭地鐵進市區。', map:'김포국제공항'},
+   {t:'14:00', cat:'logi', title:'Ibis 仁寺洞 Check-in', ll:[37.5744,126.9856], place:'地鐵 5 號線 · 仁寺洞', note:'放好行李、輕裝出門。', map:'ibis Ambassador Seoul Insadong'},
+   {t:'15:00', end:'18:00', cat:'shop', title:'明洞換錢 + Olive Young', ll:[37.5636,126.9838], place:'明洞 · 大使館換錢所', note:'先在「大使館換錢所」換韓幣,再到 Olive Young 地毯式補貨美妝、面膜、零食。', map:'명동 대사관환전소'},
+   {t:'18:30', end:'20:00', cat:'food', title:'元堂脊骨馬鈴薯湯', ll:[37.5648,126.9855], place:'明洞店', note:'湯頭濃郁,長途飛行後最適合恢復體力的一鍋。', map:'원당 감자탕 명동'},
+   {t:'22:00', end:'24:00', cat:'night', title:'HYDE Seoul', ll:[37.5347,126.9945], place:'精緻酒吧', note:'調酒風格時尚,適合開場暖身、慢慢進入夜的節奏。', map:'HYDE bar Seoul'},
+   {t:'00:00', end:'03:00', cat:'night', title:'Club GYM', ll:[37.534,126.9927], place:'梨泰院 Itaewon', note:'梨泰院最夯俱樂部之一,感受首爾頂級夜生活。財物請貼身。', map:'Club GYM Itaewon'},
   ]},
  {d:'8/8', wk:'六', key:'DAY 02', title:'市場美食 · 夜間探險', sub:'廣藏市場開胃,DDP 感受古今交錯,晚上與韓國朋友續攤。',
   stops:[
-   {t:'11:00', end:'13:00', cat:'food', title:'廣藏市場 早午餐', place:'綠豆煎餅 · 生牛肉', note:'首爾最經典的傳統市場,綠豆煎餅現煎最香,生牛肉配蛋黃是必試。', map:'광장시장'},
-   {t:'14:00', end:'16:00', cat:'sight', title:'DDP 東大門設計廣場', place:'步行至興仁之門', note:'Zaha Hadid 的流線建築,再散步到興仁之門,一次感受未來與古城。', map:'DDP 동대문디자인플라자'},
+   {t:'11:00', end:'13:00', cat:'food', title:'廣藏市場 早午餐', ll:[37.5701,126.9996], place:'綠豆煎餅 · 生牛肉', note:'首爾最經典的傳統市場,綠豆煎餅現煎最香,生牛肉配蛋黃是必試。', map:'광장시장'},
+   {t:'14:00', end:'16:00', cat:'sight', title:'DDP 東大門設計廣場', ll:[37.5665,127.0092], place:'步行至興仁之門', note:'Zaha Hadid 的流線建築,再散步到興仁之門,一次感受未來與古城。', map:'DDP 동대문디자인플라자'},
    {t:'19:00', end:'21:30', cat:'food', title:'與 SUN / HAM 聚餐', place:'待通知', note:'韓國朋友帶路的一餐,地點確認後更新。', map:'서울 맛집'},
-   {t:'22:00', end:'03:00', cat:'night', title:'Bear Cave', place:'梨泰院 Itaewon', note:'獨特地下氛圍的酒吧,很適合當今晚的固定據點。', map:'Bear Cave bar Itaewon'},
+   {t:'22:00', end:'03:00', cat:'night', title:'Bear Cave', ll:[37.5344,126.9938], place:'梨泰院 Itaewon', note:'獨特地下氛圍的酒吧,很適合當今晚的固定據點。', map:'Bear Cave bar Itaewon'},
   ]},
  {d:'8/9', wk:'日', key:'DAY 03', title:'仁寺洞漫遊 · 江南豪景', sub:'韓屋茶屋放空,換宿 JW Marriott,夜賞盤浦大橋彩虹噴泉。',
   stops:[
-   {t:'11:00', end:'12:30', cat:'food', title:'退房 · 仁寺洞午餐', place:'Ssamzigil 三吉市場一帶', note:'退房後在三吉市場附近覓食,順逛文創小店。', map:'쌈지길 인사동'},
-   {t:'12:30', end:'14:00', cat:'sight', title:'耕仁美術館 茶屋', place:'Tea House · 韓屋', note:'隱身鬧區的絕美韓屋茶屋,點壺傳統茶在庭院發呆。', map:'경인미술관 전통다원'},
-   {t:'15:00', end:'16:30', cat:'logi', title:'JW Marriott Check-in', place:'江南', note:'入住並參觀飯店設施,享受升級的住宿。', map:'JW Marriott Hotel Seoul'},
-   {t:'16:30', end:'17:00', cat:'food', title:'行政酒廊小點', place:'VINCENT / POLAR 輪替', note:'傍晚到 Lounge 補點心與飲料,顧好體力再出門。', map:'JW Marriott Seoul executive lounge'},
-   {t:'19:00', end:'20:00', cat:'food', title:'與 DOGGI 江南晚餐', place:'江南', note:'和朋友在江南吃晚餐。', map:'강남 맛집'},
-   {t:'20:30', end:'21:30', cat:'sight', title:'盤浦大橋月光彩虹噴泉', place:'盤浦漢江公園', note:'坐在盤浦漢江公園欣賞,絕對是這趟最浪漫的一刻。', map:'반포대교 달빛무지개분수'},
+   {t:'11:00', end:'12:30', cat:'food', title:'退房 · 仁寺洞午餐', ll:[37.5744,126.9853], place:'Ssamzigil 三吉市場一帶', note:'退房後在三吉市場附近覓食,順逛文創小店。', map:'쌈지길 인사동'},
+   {t:'12:30', end:'14:00', cat:'sight', title:'耕仁美術館 茶屋', ll:[37.5748,126.984], place:'Tea House · 韓屋', note:'隱身鬧區的絕美韓屋茶屋,點壺傳統茶在庭院發呆。', map:'경인미술관 전통다원'},
+   {t:'15:00', end:'16:30', cat:'logi', title:'JW Marriott Check-in', ll:[37.5047,127.0046], place:'江南', note:'入住並參觀飯店設施,享受升級的住宿。', map:'JW Marriott Hotel Seoul'},
+   {t:'16:30', end:'17:00', cat:'food', title:'行政酒廊小點', ll:[37.5047,127.0046], place:'VINCENT / POLAR 輪替', note:'傍晚到 Lounge 補點心與飲料,顧好體力再出門。', map:'JW Marriott Seoul executive lounge'},
+   {t:'19:00', end:'20:00', cat:'food', title:'與 DOGGI 江南晚餐', ll:[37.4979,127.0276], place:'江南', note:'和朋友在江南吃晚餐。', map:'강남 맛집'},
+   {t:'20:30', end:'21:30', cat:'sight', title:'盤浦大橋月光彩虹噴泉', ll:[37.511,126.996], place:'盤浦漢江公園', note:'坐在盤浦漢江公園欣賞,絕對是這趟最浪漫的一刻。', map:'반포대교 달빛무지개분수'},
   ]},
  {d:'8/10', wk:'一', key:'DAY 04', title:'時尚購物 · 烤肉饗宴', sub:'星空圖書館打卡、奉恩寺參拜,漢江散步,收尾樂天大採買。',
   stops:[
-   {t:'10:00', cat:'sight', title:'星空圖書館', place:'COEX Mall', note:'超高書牆的網美圖書館,COEX 內順逛。', map:'별마당도서관 코엑스'},
-   {t:'11:30', cat:'sight', title:'奉恩寺參拜', place:'江南 · Bongeunsa', note:'摩天樓包圍中的千年古寺,鬧中取靜。', map:'봉은사'},
-   {t:'13:00', cat:'food', title:'三代蔘雞匠人', place:'午餐', note:'一整隻的人蔘雞湯,暑天以熱補熱的韓式養生。', map:'삼대삼계장인'},
-   {t:'16:00', cat:'sight', title:'漢江邊散步', place:'盤浦 / 汝矣島漢江公園', note:'回飯店寄行李後,到漢江吹風散步,租墊子躺草地也很韓。', map:'여의도한강공원'},
-   {t:'18:00', end:'20:00', cat:'shop', title:'樂天超市 大採買', place:'首爾站旁', note:'伴手禮一次補齊。週一晚人潮較少是好時機,記得帶可摺疊行李袋。', map:'롯데마트 서울역점'},
-   {t:'20:30', end:'22:00', cat:'food', title:'烤牛腸專賣', place:'奉天洞烤牛腸 / 王妃家', note:'高品質牛腸現烤,油脂香氣爆表,配燒酒收尾。', map:'봉천동 곱창'},
+   {t:'10:00', cat:'sight', title:'星空圖書館', ll:[37.5101,127.0592], place:'COEX Mall', note:'超高書牆的網美圖書館,COEX 內順逛。', map:'별마당도서관 코엑스'},
+   {t:'11:30', cat:'sight', title:'奉恩寺參拜', ll:[37.5148,127.0576], place:'江南 · Bongeunsa', note:'摩天樓包圍中的千年古寺,鬧中取靜。', map:'봉은사'},
+   {t:'13:00', cat:'food', title:'三代蔘雞匠人', ll:[37.512,127.056], place:'午餐', note:'一整隻的人蔘雞湯,暑天以熱補熱的韓式養生。', map:'삼대삼계장인'},
+   {t:'16:00', cat:'sight', title:'漢江邊散步', ll:[37.5083,126.9928], place:'盤浦 / 汝矣島漢江公園', note:'回飯店寄行李後,到漢江吹風散步,租墊子躺草地也很韓。', map:'여의도한강공원'},
+   {t:'18:00', end:'20:00', cat:'shop', title:'樂天超市 大採買', ll:[37.5549,126.9706], place:'首爾站旁', note:'伴手禮一次補齊。週一晚人潮較少是好時機,記得帶可摺疊行李袋。', map:'롯데마트 서울역점'},
+   {t:'20:30', end:'22:00', cat:'food', title:'烤牛腸專賣', ll:[37.4823,126.942], place:'奉天洞烤牛腸 / 王妃家', note:'高品質牛腸現烤,油脂香氣爆表,配燒酒收尾。', map:'봉천동 곱창'},
   ]},
  {d:'8/11', wk:'二', key:'DAY 05', title:'美容護理 · 完美句點', sub:'保養、燉牛排骨,取行李從容前往金浦,貴賓室休息後起飛。',
   stops:[
-   {t:'10:30', cat:'logi', title:'退房 · 寄放行李', place:'JW Marriott', note:'Check-out 後把行李寄放櫃檯。', map:'JW Marriott Hotel Seoul'},
-   {t:'11:30', cat:'beauty', title:'수앤모 성형외과 保養', place:'美容診所 · 江南', note:'三人預計 2 小時完成保養。建議出發前一週請飯店協助再確認預約。', map:'수앤모의원 강남'},
-   {t:'13:30', end:'14:30', cat:'food', title:'강남면옥 江南麵屋', place:'午餐', note:'燉牛排骨(갈비찜)是必吃亮點,冷麵解暑也一流。', map:'강남면옥'},
-   {t:'16:00', cat:'logi', title:'取行李 · 前往金浦', place:'地鐵 → GMP', note:'回飯店取行李,搭地鐵前往機場,預留充裕時間。', map:'김포국제공항'},
-   {t:'17:00', cat:'logi', title:'金浦 Check-in · 貴賓室', place:'GMP', note:'櫃檯報到後,用 PP 卡到貴賓室休息、補貨。', map:'김포국제공항 라운지'},
-   {t:'19:15', cat:'logi', title:'航班起飛', place:'返程', note:'首爾,再見!', map:'김포국제공항'},
+   {t:'10:30', cat:'logi', title:'退房 · 寄放行李', ll:[37.5047,127.0046], place:'JW Marriott', note:'Check-out 後把行李寄放櫃檯。', map:'JW Marriott Hotel Seoul'},
+   {t:'11:30', cat:'beauty', title:'수앤모 성형외과 保養', ll:[37.4989,127.0284], place:'美容診所 · 江南', note:'三人預計 2 小時完成保養。建議出發前一週請飯店協助再確認預約。', map:'수앤모의원 강남'},
+   {t:'13:30', end:'14:30', cat:'food', title:'강남면옥 江南麵屋', ll:[37.5109,127.0227], place:'午餐', note:'燉牛排骨(갈비찜)是必吃亮點,冷麵解暑也一流。', map:'강남면옥'},
+   {t:'16:00', cat:'logi', title:'取行李 · 前往金浦', ll:[37.5047,127.0046], place:'地鐵 → GMP', note:'回飯店取行李,搭地鐵前往機場,預留充裕時間。', map:'김포국제공항'},
+   {t:'17:00', cat:'logi', title:'金浦 Check-in · 貴賓室', ll:[37.5586,126.7944], place:'GMP', note:'櫃檯報到後,用 PP 卡到貴賓室休息、補貨。', map:'김포국제공항 라운지'},
+   {t:'19:15', cat:'logi', title:'航班起飛', ll:[37.5586,126.7944], place:'返程', note:'首爾,再見!', map:'김포국제공항'},
   ]},
 ];
 
@@ -839,7 +852,34 @@ function renderDay(){
       <div class="dh-t">${d.title}</div>
       <div class="dh-s">${d.sub}</div>
     </div>
+    <div class="day-map" id="dayMap"></div>
     <div class="line">${stops}</div>`;
+  buildDayMap(d);
+}
+
+/* ---- daily route mini-map (Leaflet, vendored; hides gracefully offline) ---- */
+let _map = null;
+function buildDayMap(d){
+  const box = document.getElementById('dayMap');
+  if (!box) return;
+  const pts = d.stops.filter(s=>s.ll);
+  if (!window.L || !navigator.onLine || pts.length < 2){ box.classList.remove('on'); return; }
+  box.classList.add('on');
+  if (_map){ try{_map.remove();}catch(e){} _map = null; }
+  try{
+    _map = L.map(box, {zoomControl:false, dragging:false, scrollWheelZoom:false, boxZoom:false, doubleClickZoom:false, keyboard:false, attributionControl:true});
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(_map);
+    const latlngs = [];
+    pts.forEach((s,i)=>{
+      const col = getComputedStyle(document.documentElement).getPropertyValue(
+        {food:'--coral',sight:'--cobalt',night:'--violet',shop:'--teal',beauty:'--pink',logi:'--logi'}[s.cat]||'--cobalt').trim();
+      latlngs.push(s.ll);
+      L.circleMarker(s.ll, {radius:7, color:'#fff', weight:2.5, fillColor:col, fillOpacity:1})
+        .addTo(_map).bindPopup(`${s.t} · ${s.title}`);
+    });
+    L.polyline(latlngs, {color:'#7B93FF', weight:3, opacity:.75, dashArray:'2 7', lineCap:'round'}).addTo(_map);
+    _map.fitBounds(L.latLngBounds(latlngs), {padding:[26,26]});
+  }catch(e){ box.classList.remove('on'); }
 }
 
 /* ============================================================
@@ -1212,6 +1252,11 @@ document.getElementById('themeBtn').addEventListener('click', ()=>{
   toast(next==='dark' ? '深色模式' : '淺色模式');
 });
 applyThemeMeta();
+
+/* leaflet loads deferred; build the map once it's ready */
+window.addEventListener('load', ()=>{ if (window.L) buildDayMap(DAYS[curDay]); });
+window.addEventListener('online',  ()=>buildDayMap(DAYS[curDay]));
+window.addEventListener('offline', ()=>{ const b=document.getElementById('dayMap'); if(b) b.classList.remove('on'); });
 
 /* service worker */
 if('serviceWorker' in navigator){

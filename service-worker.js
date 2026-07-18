@@ -1,12 +1,14 @@
 /* 首爾同行 — offline app shell (network-first for HTML) */
-const CACHE = 'seoul-trip-v7';
+const CACHE = 'seoul-trip-v8';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-maskable-512.png'
+  './icons/icon-maskable-512.png',
+  './vendor/leaflet.js',
+  './vendor/leaflet.css'
 ];
 
 self.addEventListener('install', e => {
