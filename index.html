@@ -164,7 +164,12 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
 .rail{position:relative;width:100%;display:flex;justify-content:center}
 .rail::before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:9px;bottom:-24px;width:3px;background:var(--line2);border-radius:2px}
 .stop:last-child .rail::before{display:none}
-.node{position:relative;z-index:2;width:15px;height:15px;border-radius:50%;background:var(--paper);border:3.5px solid var(--c);margin-top:5px;box-shadow:0 0 0 3px var(--paper)}
+.node{position:relative;z-index:2;width:15px;height:15px;border-radius:50%;background:var(--paper);border:3.5px solid var(--c);margin-top:5px;box-shadow:0 0 0 3px var(--paper);cursor:pointer;transition:background .15s}
+.node::after{content:'';position:absolute;inset:-13px}
+.stop.done .node{background:var(--c)}
+.stop.done .node::before{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--paper);font-size:9px;font-weight:900;line-height:1}
+.stop.done .stop-body{opacity:.55}
+.stop.done .stop-title{color:var(--ink2)}
 .time{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink2);text-align:right;padding-top:3px;letter-spacing:-.02em}
 .time small{display:block;font-size:9.5px;color:var(--ink3);font-weight:400}
 .stop-body{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:12px;padding:11px 13px;box-shadow:var(--sh);position:relative;overflow:hidden}
@@ -293,6 +298,17 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
 .offline-note{font-size:11.5px;color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--card));border-radius:10px;padding:8px 12px;margin-top:12px;text-align:center;display:none}
 .offline-note.show{display:block}
 
+/* weather strip */
+.wx-row{display:flex;gap:4px;overflow-x:auto;padding:0 6px;scrollbar-width:none}
+.wx-row::-webkit-scrollbar{display:none}
+.wx{flex:none;min-width:64px;text-align:center;padding:6px 4px;border-radius:12px}
+.wx.today-wx{background:var(--cobalt-wash)}
+.wx .wx-d{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink3);font-weight:700}
+.wx .wx-e{font-size:21px;margin:3px 0 1px}
+.wx .wx-t{font-size:11.5px;font-weight:700}
+.wx .wx-t small{color:var(--ink3);font-weight:600}
+.wx .wx-r{font-size:9.5px;color:var(--cobalt);font-weight:700;margin-top:1px}
+
 /* ================= INFO ================= */
 .info-card{padding:15px 16px;margin-top:12px}
 .info-card h4{font-family:var(--disp);font-weight:900;font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
@@ -308,6 +324,17 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
 .emerg .em-n{font-family:var(--disp);font-weight:900;font-size:20px;color:var(--coral)}
 .emerg .em-l{font-size:11px;color:var(--ink2);margin-top:1px}
 .foot-note{text-align:center;font-size:11px;color:var(--ink3);margin:26px 0 6px;font-family:var(--mono);letter-spacing:.04em}
+
+/* micro-interactions */
+@media (prefers-reduced-motion: no-preference){
+  @keyframes riseIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .line .stop{animation:riseIn .34s ease backwards;animation-delay:calc(var(--i,0)*45ms)}
+  .place{animation:riseIn .34s ease backwards;animation-delay:calc(var(--i,0)*40ms)}
+  .today{animation:riseIn .4s ease backwards}
+  .day-btn:active,.filt:active,.theme-btn:active,.maplink:active{transform:scale(.96)}
+  .day-btn,.filt,.theme-btn,.maplink{transition:transform .12s,color .2s,background .2s}
+  .node:active{transform:scale(1.25)}
+}
 
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--sel-bg);color:var(--sel-tx);font-size:13px;font-weight:600;padding:10px 18px;border-radius:999px;z-index:80;opacity:0;pointer-events:none;transition:.3s;white-space:nowrap}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -355,6 +382,14 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
     <div class="settle card" id="settleBox"></div>
     <div class="section-label">共同帳目</div>
     <div id="expList"></div>
+    <div class="section-label">三人對帳 · 傳代碼合併</div>
+    <div class="card" style="padding:14px 16px">
+      <div style="font-size:12.5px;color:var(--ink2);line-height:1.6">帳目存在各自手機裡。把你的「帳目代碼」傳給旅伴(LINE/訊息都行),對方匯入後就能合併,同一筆不會重複。</div>
+      <div style="display:flex;gap:8px;margin-top:11px">
+        <button class="btn-primary" style="margin:0;padding:11px" id="syncExport">匯出代碼</button>
+        <button class="btn-primary" style="margin:0;padding:11px;background:var(--sel-bg);color:var(--sel-tx);box-shadow:none" id="syncImport">匯入代碼</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== CURRENCY ===== -->
@@ -389,6 +424,13 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
 
   <!-- ===== INFO ===== -->
   <section id="v-info" class="view">
+    <div id="weatherWrap" style="display:none">
+      <div class="section-label">首爾天氣</div>
+      <div class="card" style="padding:13px 8px 11px">
+        <div class="wx-row" id="wxRow"></div>
+        <div id="wxNote" style="font-size:10.5px;color:var(--ink3);text-align:center;margin-top:8px;font-family:var(--mono)"></div>
+      </div>
+    </div>
     <div class="section-label">導遊叮嚀</div>
     <div id="tipsList"></div>
     <div class="section-label">行程速覽</div>
@@ -475,6 +517,17 @@ html[data-theme="dark"] .day-map .leaflet-tile{filter:invert(1) hue-rotate(180de
   </div>
   <button class="btn-primary" id="exSave">加入帳目</button>
   <button class="btn-ghost" id="exCancel">取消</button>
+</div>
+
+<div class="sheet" id="syncSheet">
+  <div class="grab"></div>
+  <h3 id="syncTitle">帳目代碼</h3>
+  <div class="field">
+    <label id="syncLabel">代碼</label>
+    <textarea id="syncText" rows="5" style="width:100%;padding:12px 13px;border:1.5px solid var(--line2);border-radius:12px;background:var(--card);color:var(--ink);font-family:var(--mono);font-size:11px;word-break:break-all;resize:none"></textarea>
+  </div>
+  <button class="btn-primary" id="syncAction">複製代碼</button>
+  <button class="btn-ghost" id="syncClose">關閉</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -828,12 +881,13 @@ function renderDaySwitch(){
 }
 function renderDay(){
   const d = DAYS[curDay];
-  const stops = d.stops.map(s=>{
+  const stops = d.stops.map((s,i)=>{
     const c = CATS[s.cat];
     const time = s.end ? `${s.t}<small>– ${s.end}</small>` : s.t;
-    return `<div class="stop ${c.cls}" style="--c:${c.color}">
+    const isDone = !!doneMap[curDay+'-'+i];
+    return `<div class="stop ${c.cls}${isDone?' done':''}" data-idx="${i}" style="--c:${c.color};--i:${Math.min(i,8)}">
       <div class="time">${time}</div>
-      <div class="rail"><div class="node"></div></div>
+      <div class="rail"><div class="node" role="button" aria-label="標記完成" tabindex="0"></div></div>
       <div class="stop-body">
         <div class="stop-title">${s.title}<span class="chip tag ${c.cls}" style="--c:${c.color}"><span class="dot" style="background:${c.color}"></span>${c.label}</span></div>
         <div class="stop-place">${s.place}</div>
@@ -856,6 +910,18 @@ function renderDay(){
     <div class="line">${stops}</div>`;
   buildDayMap(d);
 }
+
+/* ---- stop check-off ---- */
+let doneMap = LS.read('sm_done', {});
+document.getElementById('dayContent').addEventListener('click', e=>{
+  const node = e.target.closest('.node');
+  if (!node) return;
+  const stopEl = node.closest('.stop');
+  const key = curDay + '-' + stopEl.dataset.idx;
+  if (doneMap[key]) delete doneMap[key]; else doneMap[key] = 1;
+  LS.write('sm_done', doneMap);
+  stopEl.classList.toggle('done', !!doneMap[key]);
+});
 
 /* ---- daily route mini-map (Leaflet, vendored; hides gracefully offline) ---- */
 let _map = null;
@@ -902,7 +968,7 @@ function renderGuide(){
   const list=PLACES.filter(p=>guideFilter==='all'||p.cat===guideFilter);
   document.getElementById('guideList').innerHTML=list.map(p=>{
     const c=CATS[p.cat];
-    return `<div class="place card ${c.cls}" style="--c:${c.color}">
+    return `<div class="place card ${c.cls}" style="--c:${c.color};--i:${Math.min(list.indexOf(p),8)}">
       ${artBanner(p.art, p.name)}
       <div class="place-top">
         <div>
@@ -1204,7 +1270,7 @@ document.getElementById('exKRW').addEventListener('click',()=>{draft.cur='KRW';d
 document.getElementById('exTWD').addEventListener('click',()=>{draft.cur='TWD';document.getElementById('exTWD').classList.add('active');document.getElementById('exKRW').classList.remove('active');});
 document.getElementById('fab').addEventListener('click',openSheet);
 document.getElementById('exCancel').addEventListener('click',closeSheet);
-document.getElementById('scrim').addEventListener('click',closeSheet);
+document.getElementById('scrim').addEventListener('click',()=>{closeSheet();closeSync();});
 document.getElementById('exSave').addEventListener('click',()=>{
   const amt=parseFloat(document.getElementById('exAmt').value);
   if(!amt||amt<=0){ toast('請輸入金額'); return; }
@@ -1216,6 +1282,96 @@ document.getElementById('exSave').addEventListener('click',()=>{
   });
   LS.write('sm_exp',expenses);
   closeSheet(); renderSplit(); toast('已加入一筆帳目');
+});
+
+/* ---- Seoul weather (Open-Meteo, keyless) ---- */
+const WMO = c =>
+  c===0?['☀️','晴']: c<=2?['🌤','多雲時晴']: c===3?['☁️','陰']:
+  c<=48?['🌫','霧']: c<=57?['🌦','毛毛雨']: c<=67?['🌧','雨']:
+  c<=77?['🌨','雪']: c<=82?['🌧','陣雨']: ['⛈','雷雨'];
+function renderWeather(data, stale){
+  const wrap=document.getElementById('weatherWrap');
+  if(!data || !data.daily){ wrap.style.display='none'; return; }
+  const D=data.daily, wd=['日','一','二','三','四','五','六'];
+  document.getElementById('wxRow').innerHTML = D.time.map((t,i)=>{
+    const dt=new Date(t+'T00:00:00');
+    const [emo]=WMO(D.weather_code[i]);
+    const rain=D.precipitation_probability_max ? D.precipitation_probability_max[i] : null;
+    return `<div class="wx${i===0?' today-wx':''}">
+      <div class="wx-d">${dt.getMonth()+1}/${dt.getDate()} ${wd[dt.getDay()]}</div>
+      <div class="wx-e">${emo}</div>
+      <div class="wx-t">${Math.round(D.temperature_2m_max[i])}°<small>/${Math.round(D.temperature_2m_min[i])}°</small></div>
+      ${rain!=null?`<div class="wx-r">☂ ${rain}%</div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('wxNote').textContent = stale ? '離線 · 顯示上次更新' : '首爾 · Open-Meteo';
+  wrap.style.display='block';
+}
+async function fetchWeather(){
+  const cached = LS.read('sm_weather', null);
+  try{
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=7',{cache:'no-store'});
+    const j = await r.json();
+    if(!j || !j.daily) throw 0;
+    LS.write('sm_weather', j);
+    renderWeather(j, false);
+  }catch(_){
+    renderWeather(cached, true);
+  }
+}
+
+/* ---- expense sync via code ---- */
+const b64enc = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const b64dec = t => JSON.parse(decodeURIComponent(escape(atob(t.trim()))));
+let syncMode = 'export';
+function openSync(mode){
+  syncMode = mode;
+  const ta = document.getElementById('syncText');
+  if (mode === 'export'){
+    document.getElementById('syncTitle').textContent = '匯出帳目代碼';
+    document.getElementById('syncLabel').textContent = '把這段代碼傳給旅伴';
+    document.getElementById('syncAction').textContent = '複製代碼';
+    ta.value = b64enc({v:1, names, expenses});
+    ta.readOnly = true;
+  } else {
+    document.getElementById('syncTitle').textContent = '匯入帳目代碼';
+    document.getElementById('syncLabel').textContent = '貼上旅伴傳來的代碼';
+    document.getElementById('syncAction').textContent = '合併帳目';
+    ta.value = ''; ta.readOnly = false;
+  }
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('syncSheet').classList.add('open');
+}
+function closeSync(){
+  document.getElementById('scrim').classList.remove('open');
+  document.getElementById('syncSheet').classList.remove('open');
+}
+document.getElementById('syncExport').addEventListener('click', ()=>openSync('export'));
+document.getElementById('syncImport').addEventListener('click', ()=>openSync('import'));
+document.getElementById('syncClose').addEventListener('click', closeSync);
+document.getElementById('syncAction').addEventListener('click', async ()=>{
+  const ta = document.getElementById('syncText');
+  if (syncMode === 'export'){
+    let ok = false;
+    try{ await navigator.clipboard.writeText(ta.value); ok = true; }catch(_){}
+    if (!ok){ ta.select(); try{ ok = document.execCommand('copy'); }catch(_){}}
+    toast(ok ? '已複製,傳給旅伴吧' : '請長按代碼手動複製');
+    if (ok) closeSync();
+  } else {
+    try{
+      const d = b64dec(ta.value);
+      if (!d || !Array.isArray(d.expenses)) throw 0;
+      const have = new Set(expenses.map(x=>x.id));
+      let added = 0;
+      d.expenses.forEach(x=>{
+        if (x && x.id && !have.has(x.id) && typeof x.amt==='number'){ expenses.push(x); added++; }
+      });
+      if (!expenses.length && Array.isArray(d.names) && d.names.length===3) names = d.names;
+      LS.write('sm_exp', expenses);
+      renderSplit(); closeSync();
+      toast(added ? `已合併 ${added} 筆新帳目` : '沒有新的帳目(都已存在)');
+    }catch(_){ toast('代碼看起來不完整,重新貼一次'); }
+  }
 });
 
 /* ---- toast ---- */
@@ -1235,7 +1391,8 @@ renderDaySwitch(); renderDay();
 renderGuideFilters(); renderGuide();
 renderTips();
 renderRateUI(); renderSplit();
-fetchRate();
+fetchRate(); fetchWeather();
+window.addEventListener('online', fetchWeather);
 
 /* ---- theme toggle ---- */
 function applyThemeMeta(){

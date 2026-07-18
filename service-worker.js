@@ -1,5 +1,5 @@
 /* 首爾同行 — offline app shell (network-first for HTML) */
-const CACHE = 'seoul-trip-v8';
+const CACHE = 'seoul-trip-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
 
   // Live exchange-rate API: always go to network, never cache
-  if (url.hostname.includes('er-api.com')) return;
+  if (url.hostname.includes('er-api.com') || url.hostname.includes('open-meteo.com')) return;
 
   const isHTML = req.mode === 'navigate'
     || req.destination === 'document'
