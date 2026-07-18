@@ -169,8 +169,12 @@ nav{
 .filt.active{background:var(--sel-bg);color:var(--sel-tx);border-color:var(--sel-bg)}
 .filt.active .dot{box-shadow:0 0 0 2px rgba(255,255,255,.35)}
 .place{padding:15px 16px;margin-top:12px;overflow:hidden}
-.place-art{margin:-15px -16px 13px;height:108px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--c) 9%,var(--card))}
+.place-art{position:relative;margin:-15px -16px 13px;height:108px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--c) 9%,var(--card));cursor:pointer}
 .place-art svg{width:100%;height:100%;display:block}
+.place-art img{width:100%;height:100%;object-fit:cover;display:block}
+.art-hint{position:absolute;right:9px;bottom:8px;width:26px;height:26px;border-radius:9px;background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(4px);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink3);pointer-events:none}
+.art-hint svg{width:14px;height:14px;stroke-width:2}
+.art-reset{position:absolute;right:8px;top:8px;width:27px;height:27px;border-radius:9px;background:rgba(14,15,19,.55);backdrop-filter:blur(4px);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1}
 .place-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .place-name{font-family:var(--disp);font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.15}
 .place-en{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink3);margin-top:3px;text-transform:uppercase}
@@ -461,6 +465,7 @@ nav{
 </div>
 
 <div class="toast" id="toast"></div>
+<input type="file" id="photoInput" accept="image/*" style="display:none">
 
 <script>
 /* ============================================================
@@ -596,10 +601,19 @@ cart: `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="232" y="38" width="24" height="18" rx="4" fill="var(--c)"/>
 </g>`,
 };
-function artBanner(key){
+let photos = {};
+const CAM = `<span class="art-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3.5"/></svg></span>`;
+function artBanner(key, placeName){
+  const ph = photos[placeName];
+  if (ph) return `<div class="place-art has-photo" data-place="${placeName}">
+    <img src="${ph}" alt="${placeName}" loading="lazy">
+    <button class="art-reset" data-reset="${placeName}" aria-label="還原插圖">↺</button>
+  </div>`;
   const inner = ART[key];
   if (!inner) return '';
-  return `<div class="place-art"><svg viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${inner}</svg></div>`;
+  return `<div class="place-art" data-place="${placeName}">
+    <svg viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${inner}</svg>${CAM}
+  </div>`;
 }
 
 const DAYS = [
@@ -686,6 +700,7 @@ let names   = LS.read('sm_names', ['我','旅伴 A','旅伴 B']);
 let expenses= LS.read('sm_exp', []);
 let rate    = LS.read('sm_rate', {krwToTwd:0.0234, time:null});  // 1 KRW = x TWD (approx fallback)
 let settleCur = LS.read('sm_settle','KRW'); // settlement currency for split view
+photos  = LS.read('sm_photos', {});
 
 /* ============================================================
    TODAY CARD
@@ -848,7 +863,7 @@ function renderGuide(){
   document.getElementById('guideList').innerHTML=list.map(p=>{
     const c=CATS[p.cat];
     return `<div class="place card ${c.cls}" style="--c:${c.color}">
-      ${artBanner(p.art)}
+      ${artBanner(p.art, p.name)}
       <div class="place-top">
         <div>
           <div class="place-name">${p.name}</div>
@@ -866,6 +881,61 @@ function renderGuide(){
     </div>`;
   }).join('');
 }
+
+/* ---- place photos: tap banner to upload, ↺ to restore ---- */
+let photoTarget = null;
+document.getElementById('guideList').addEventListener('click', e=>{
+  const reset = e.target.closest('.art-reset');
+  if (reset){
+    e.stopPropagation();
+    delete photos[reset.dataset.reset];
+    try{ localStorage.setItem('sm_photos', JSON.stringify(photos)); }catch(_){}
+    renderGuide(); toast('已還原插圖');
+    return;
+  }
+  const art = e.target.closest('.place-art');
+  if (art){
+    photoTarget = art.dataset.place;
+    document.getElementById('photoInput').click();
+  }
+});
+document.getElementById('photoInput').addEventListener('change', async e=>{
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file || !photoTarget) return;
+  try{
+    let bmp;
+    if (window.createImageBitmap){
+      try{ bmp = await createImageBitmap(file, {imageOrientation:'from-image'}); }
+      catch(_){ bmp = await createImageBitmap(file); }
+    } else {
+      bmp = await new Promise((res, rej)=>{
+        const img = new Image();
+        img.onload = ()=>res(img); img.onerror = rej;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+    const MAXW = 900;
+    const scale = Math.min(1, MAXW / bmp.width);
+    const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(bmp, 0, 0, w, h);
+    const dataUrl = cv.toDataURL('image/jpeg', 0.72);
+    photos[photoTarget] = dataUrl;
+    try{
+      localStorage.setItem('sm_photos', JSON.stringify(photos));
+    }catch(err){
+      delete photos[photoTarget];
+      toast('儲存空間不足,請先還原幾張照片');
+      return;
+    }
+    renderGuide(); toast('照片已更換');
+  }catch(err){
+    toast('這張照片讀取失敗,換一張試試');
+  }finally{
+    photoTarget = null;
+  }
+});
 
 /* ============================================================
    TIPS
