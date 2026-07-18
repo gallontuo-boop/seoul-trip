@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#274BDB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="首爾同行">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>首爾同行 · Seoul Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F2EE; --paper2:#FBFBF9; --card:#FFFFFF;
+  --ink:#15171C; --ink2:#4B505B; --ink3:#878C97;
+  --line:#E3E4DE; --line2:#D6D7D0;
+  --cobalt:#274BDB; --cobalt-d:#1C36A6; --cobalt-wash:#EAEEFB;
+  --coral:#EA4E27; --violet:#7B2FBE; --teal:#0E8A6E; --gold:#B0832B; --pink:#CE2F82; --logi:#5A6270;
+  --sh:0 1px 2px rgba(20,24,34,.05),0 6px 20px -8px rgba(20,24,34,.10);
+  --sh2:0 2px 6px rgba(20,24,34,.06),0 18px 40px -18px rgba(20,24,34,.22);
+  --disp:'Fraunces',Georgia,'Songti TC',serif;
+  --mono:'Space Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);background:var(--paper);color:var(--ink);
+  line-height:1.55;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:16px}
+::selection{background:var(--cobalt);color:#fff}
+
+/* ---------- App frame ---------- */
+#app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative}
+.view{display:none;padding:0 18px calc(96px + env(safe-area-inset-bottom)) 18px;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Header ---------- */
+header{
+  position:sticky;top:0;z-index:40;background:var(--paper);
+  padding:calc(env(safe-area-inset-top) + 14px) 18px 10px;
+  border-bottom:1px solid var(--line);
+}
+.h-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cobalt);font-weight:700}
+.h-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:1px}
+.h-title{font-family:var(--disp);font-weight:900;font-size:26px;letter-spacing:-.01em;line-height:1}
+.h-date{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:.02em;white-space:nowrap}
+
+/* ---------- Bottom nav ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  max-width:520px;margin:0 auto;
+  background:rgba(251,251,249,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding:8px 6px calc(6px + env(safe-area-inset-bottom));
+}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;color:var(--ink3);border-radius:12px;transition:color .2s}
+.tab svg{width:23px;height:23px;stroke-width:1.7}
+.tab span{font-size:10.5px;font-weight:600;letter-spacing:.01em}
+.tab.active{color:var(--cobalt)}
+.tab.active svg{stroke-width:2.1}
+
+/* ---------- Shared bits ---------- */
+.section-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin:26px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.02em;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+
+/* category colours */
+.c-food{--c:var(--coral)} .c-sight{--c:var(--cobalt)} .c-night{--c:var(--violet)}
+.c-shop{--c:var(--teal)} .c-logi{--c:var(--logi)} .c-beauty{--c:var(--pink)}
+.chip.tag{background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--c)}
+
+/* ================= DAY / ITINERARY ================= */
+.day-switch{display:flex;gap:7px;overflow-x:auto;padding:14px 0 4px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
+.day-switch::-webkit-scrollbar{display:none}
+.day-btn{flex:none;min-width:60px;text-align:center;padding:9px 12px;border-radius:14px;background:var(--paper2);border:1px solid var(--line);transition:.2s}
+.day-btn .db-d{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--ink3);font-weight:700}
+.day-btn .db-n{font-family:var(--disp);font-weight:900;font-size:19px;line-height:1.1;margin-top:2px}
+.day-btn.active{background:var(--ink);border-color:var(--ink)}
+.day-btn.active .db-d{color:#b9c2ff}
+.day-btn.active .db-n{color:#fff}
+
+.day-head{margin:18px 2px 6px}
+.day-head .dh-k{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cobalt);font-weight:700;text-transform:uppercase}
+.day-head .dh-t{font-family:var(--disp);font-weight:900;font-size:23px;letter-spacing:-.01em;margin-top:1px}
+.day-head .dh-s{color:var(--ink2);font-size:13px;margin-top:3px}
+
+/* subway-line timeline */
+.line{position:relative;margin:16px 0 4px;padding-left:4px}
+.stop{position:relative;display:grid;grid-template-columns:52px 1fr;gap:12px;padding-bottom:16px}
+.stop:last-child{padding-bottom:4px}
+.rail{position:relative;display:flex;justify-content:center}
+.rail::before{content:"";position:absolute;top:9px;bottom:-24px;width:3px;background:var(--line2);border-radius:2px}
+.stop:last-child .rail::before{display:none}
+.node{position:relative;z-index:2;width:15px;height:15px;border-radius:50%;background:#fff;border:3.5px solid var(--c);margin-top:5px;box-shadow:0 0 0 3px var(--paper)}
+.time{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink2);text-align:right;padding-top:3px;letter-spacing:-.02em}
+.time small{display:block;font-size:9.5px;color:var(--ink3);font-weight:400}
+.stop-body{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:12px;padding:11px 13px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stop-title{font-weight:700;font-size:15.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.stop-place{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.stop-note{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.5}
+.stop-foot{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.maplink{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--cobalt);text-decoration:none;padding:3px 9px;background:var(--cobalt-wash);border-radius:999px}
+.maplink svg{width:12px;height:12px}
+
+/* ================= GUIDE ================= */
+.filters{display:flex;gap:7px;overflow-x:auto;padding:14px 0 4px;margin:0 -18px;padding-left:18px;padding-right:18px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filt{flex:none;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:999px;background:var(--paper2);border:1px solid var(--line);color:var(--ink2);transition:.2s;display:inline-flex;align-items:center;gap:6px}
+.filt.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filt.active .dot{box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.place{padding:15px 16px;margin-top:12px}
+.place-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.place-name{font-family:var(--disp);font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.15}
+.place-en{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink3);margin-top:3px;text-transform:uppercase}
+.place-desc{font-size:13.5px;color:var(--ink2);margin-top:9px;line-height:1.6}
+.place-tip{font-size:12.5px;color:var(--ink);margin-top:9px;background:color-mix(in srgb,var(--c) 8%,#fff);border-left:3px solid var(--c);border-radius:0 8px 8px 0;padding:8px 11px}
+.place-tip b{color:var(--c)}
+.place-foot{margin-top:11px}
+
+/* ================= SPLIT ================= */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;box-shadow:var(--sh)}
+.stat .s-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.stat .s-v{font-family:var(--disp);font-weight:900;font-size:23px;margin-top:3px;letter-spacing:-.01em}
+.stat .s-v small{font-size:12px;font-family:var(--sans);color:var(--ink2);font-weight:600}
+
+.people{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.person{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;box-shadow:var(--sh)}
+.person .p-name{font-weight:700;font-size:13px;border:none;background:transparent;text-align:center;width:100%;color:var(--ink);padding:2px}
+.person .p-name:focus{outline:none;background:var(--cobalt-wash);border-radius:6px}
+.person .p-bal{font-family:var(--mono);font-weight:700;font-size:15px;margin-top:5px}
+.person .p-sub{font-size:10px;color:var(--ink3);margin-top:1px}
+.pos{color:var(--teal)} .neg{color:var(--coral)} .zero{color:var(--ink3)}
+
+.settle{margin-top:12px;padding:14px 16px}
+.settle-row{display:flex;align-items:center;gap:8px;font-size:14px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.settle-row:last-child{border-bottom:none}
+.settle-row .arw{color:var(--cobalt);font-weight:700}
+.settle-row .amt{margin-left:auto;font-family:var(--mono);font-weight:700}
+.settle-empty{font-size:13px;color:var(--ink3);text-align:center;padding:6px 0}
+
+.exp-item{display:flex;align-items:center;gap:11px;padding:12px 14px;margin-top:10px}
+.exp-cat{width:10px;height:10px;border-radius:50%;flex:none}
+.exp-main{flex:1;min-width:0}
+.exp-desc{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exp-meta{font-size:11.5px;color:var(--ink3);margin-top:1px}
+.exp-amt{text-align:right;flex:none}
+.exp-amt .ea-main{font-family:var(--mono);font-weight:700;font-size:14px}
+.exp-amt .ea-sub{font-size:10.5px;color:var(--ink3);font-family:var(--mono)}
+.exp-del{color:var(--ink3);padding:4px;flex:none;font-size:18px;line-height:1}
+
+.empty{text-align:center;padding:34px 20px;color:var(--ink3)}
+.empty .e-emo{font-size:30px}
+.empty .e-t{font-weight:700;color:var(--ink2);margin-top:8px;font-size:14px}
+.empty .e-s{font-size:12.5px;margin-top:3px}
+
+.fab{position:fixed;right:calc(50% - 260px + 18px);bottom:calc(84px + env(safe-area-inset-bottom));z-index:45;background:var(--cobalt);color:#fff;width:54px;height:54px;border-radius:18px;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px -6px rgba(39,75,219,.55)}
+@media(max-width:556px){.fab{right:calc(18px)}}
+.fab svg{width:26px;height:26px;stroke-width:2.4}
+.view#v-split.active ~ .fab{display:flex}
+
+/* ---------- Sheet / modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(15,17,22,.42);z-index:60;opacity:0;pointer-events:none;transition:opacity .28s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;max-width:520px;margin:0 auto;background:var(--paper2);border-radius:22px 22px 0 0;padding:8px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(102%);transition:transform .34s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 40px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
+.sheet.open{transform:none}
+.grab{width:38px;height:4px;border-radius:3px;background:var(--line2);margin:8px auto 6px}
+.sheet h3{font-family:var(--disp);font-weight:900;font-size:20px;margin:6px 0 16px}
+.field{margin-bottom:15px}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:6px}
+.field input[type=text],.field input[type=number]{width:100%;padding:12px 13px;border:1.5px solid var(--line2);border-radius:12px;background:#fff;color:var(--ink);transition:.15s}
+.field input:focus{outline:none;border-color:var(--cobalt)}
+.amt-row{display:flex;gap:8px}
+.amt-row input{flex:1}
+.cur-toggle{display:flex;background:var(--paper);border:1.5px solid var(--line2);border-radius:12px;overflow:hidden;flex:none}
+.cur-toggle button{padding:0 16px;font-weight:700;font-size:15px;color:var(--ink3)}
+.cur-toggle button.active{background:var(--cobalt);color:#fff}
+.seg{display:flex;gap:7px;flex-wrap:wrap}
+.seg button{flex:1;min-width:60px;padding:10px 6px;border-radius:11px;border:1.5px solid var(--line2);background:#fff;font-weight:700;font-size:13px;color:var(--ink2);transition:.15s}
+.seg button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.checks{display:flex;gap:7px}
+.checks button{flex:1;padding:10px 4px;border-radius:11px;border:1.5px solid var(--line2);background:#fff;font-weight:700;font-size:13px;color:var(--ink3);position:relative;transition:.15s}
+.checks button.on{background:var(--cobalt-wash);border-color:var(--cobalt);color:var(--cobalt-d)}
+.catseg{display:flex;gap:6px;flex-wrap:wrap}
+.catseg button{padding:8px 12px;border-radius:999px;border:1.5px solid var(--line2);background:#fff;font-weight:700;font-size:12px;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.catseg button.active{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--c)}
+.btn-primary{width:100%;padding:15px;background:var(--cobalt);color:#fff;border-radius:14px;font-weight:700;font-size:15.5px;margin-top:6px;box-shadow:0 6px 18px -6px rgba(39,75,219,.5)}
+.btn-primary:active{transform:scale(.99)}
+.btn-ghost{width:100%;padding:12px;color:var(--coral);font-weight:700;font-size:14px;margin-top:4px}
+
+/* ================= CURRENCY ================= */
+.conv{padding:20px 18px;margin-top:16px}
+.rate-hero{text-align:center;padding:6px 0 14px}
+.rate-hero .rh-k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.rate-hero .rh-v{font-family:var(--disp);font-weight:900;font-size:34px;letter-spacing:-.02em;margin-top:2px}
+.rate-hero .rh-s{font-size:12px;color:var(--ink2);margin-top:2px}
+.rate-hero .rh-time{font-family:var(--mono);font-size:10px;color:var(--ink3);margin-top:6px}
+.conv-box{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.conv-line{display:flex;align-items:center;gap:12px;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.conv-line .cl-cur{font-family:var(--disp);font-weight:900;font-size:20px;width:58px;flex:none}
+.conv-line .cl-cur small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink3);font-weight:400;margin-top:-2px}
+.conv-line input{flex:1;border:none;background:transparent;text-align:right;font-family:var(--mono);font-weight:700;font-size:24px;color:var(--ink);width:100%;padding:0}
+.conv-line input:focus{outline:none}
+.swap{display:flex;justify-content:center;margin:-4px 0}
+.swap button{width:40px;height:40px;border-radius:12px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh)}
+.swap svg{width:20px;height:20px;stroke-width:2.2}
+.quickref{margin-top:20px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.qr{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;box-shadow:var(--sh)}
+.qr .qr-w{font-family:var(--mono);font-weight:700;font-size:15px}
+.qr .qr-t{font-size:12.5px;color:var(--cobalt);font-weight:700;margin-top:2px}
+.refresh{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--cobalt);padding:8px 14px;background:var(--cobalt-wash);border-radius:999px;margin:14px auto 0}
+.refresh svg{width:14px;height:14px}
+.offline-note{font-size:11.5px;color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,#fff);border-radius:10px;padding:8px 12px;margin-top:12px;text-align:center;display:none}
+.offline-note.show{display:block}
+
+/* ================= INFO ================= */
+.info-card{padding:15px 16px;margin-top:12px}
+.info-card h4{font-family:var(--disp);font-weight:900;font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.info-card .ic-body{font-size:13.5px;color:var(--ink2);line-height:1.65}
+.info-card .ic-body b{color:var(--ink)}
+.tip-num{font-family:var(--mono);font-weight:700;color:var(--cobalt);font-size:12px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--ink3);font-weight:600;flex:none}
+.kv .v{text-align:right;color:var(--ink)}
+.emerg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.emerg a{text-decoration:none;background:color-mix(in srgb,var(--coral) 8%,#fff);border:1px solid color-mix(in srgb,var(--coral) 25%,#fff);border-radius:12px;padding:10px 6px;text-align:center;color:var(--ink)}
+.emerg .em-n{font-family:var(--disp);font-weight:900;font-size:20px;color:var(--coral)}
+.emerg .em-l{font-size:11px;color:var(--ink2);margin-top:1px}
+.foot-note{text-align:center;font-size:11px;color:var(--ink3);margin:26px 0 6px;font-family:var(--mono);letter-spacing:.04em}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:999px;z-index:80;opacity:0;pointer-events:none;transition:.3s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="h-eyebrow" id="hd-eyebrow">SEOUL · 5 DAYS</div>
+    <div class="h-row">
+      <div class="h-title" id="hd-title">行程</div>
+      <div class="h-date">8.07 – 8.11 · 3 PAX</div>
+    </div>
+  </header>
+
+  <!-- ===== ITINERARY ===== -->
+  <section id="v-itin" class="view active">
+    <div class="day-switch" id="daySwitch"></div>
+    <div id="dayContent"></div>
+  </section>
+
+  <!-- ===== GUIDE ===== -->
+  <section id="v-guide" class="view">
+    <div class="filters" id="guideFilters"></div>
+    <div id="guideList"></div>
+    <div class="foot-note">首爾在地精選 · 出發前記得再確認營業時間</div>
+  </section>
+
+  <!-- ===== SPLIT ===== -->
+  <section id="v-split" class="view">
+    <div class="sum-grid">
+      <div class="stat"><div class="s-k">共同開銷總額</div><div class="s-v" id="stTotal">₩0</div></div>
+      <div class="stat"><div class="s-k">筆數</div><div class="s-v" id="stCount">0</div></div>
+    </div>
+    <div class="section-label">每人結餘 · 點名字可修改</div>
+    <div class="people" id="peopleBoard"></div>
+    <div class="section-label">最省步驟結算</div>
+    <div class="settle card" id="settleBox"></div>
+    <div class="section-label">共同帳目</div>
+    <div id="expList"></div>
+  </section>
+
+  <!-- ===== CURRENCY ===== -->
+  <section id="v-cur" class="view">
+    <div class="conv card">
+      <div class="rate-hero">
+        <div class="rh-k">即時匯率 · KRW → TWD</div>
+        <div class="rh-v" id="rateBig">–</div>
+        <div class="rh-s" id="rateSub">₩1,000 ≈ NT$–</div>
+        <div class="rh-time" id="rateTime">載入中…</div>
+      </div>
+      <div class="conv-box">
+        <div class="conv-line">
+          <div class="cl-cur">₩<small>KRW 韓元</small></div>
+          <input id="inKRW" type="number" inputmode="decimal" placeholder="0" value="10000">
+        </div>
+        <div class="swap"><button id="swapBtn" aria-label="對調"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 10l0 8m0 0l-3-3m3 3l3-3M17 14l0-8m0 0l3 3m-3-3l-3 3"/></svg></button></div>
+        <div class="conv-line">
+          <div class="cl-cur">NT$<small>TWD 台幣</small></div>
+          <input id="inTWD" type="number" inputmode="decimal" placeholder="0">
+        </div>
+      </div>
+      <div style="text-align:center"><button class="refresh" id="refreshRate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12a8 8 0 0 1 14-5m2-2v4h-4M20 12a8 8 0 0 1-14 5m-2 2v-4h4"/></svg>更新匯率</button></div>
+      <div class="offline-note" id="offNote">⚠ 目前離線,顯示為上次更新的匯率</div>
+    </div>
+    <div class="quickref">
+      <div class="section-label">現金速查表</div>
+      <div class="qr-grid" id="qrGrid"></div>
+    </div>
+    <div class="foot-note">匯率為參考市場中價,實際換錢／刷卡會有價差</div>
+  </section>
+
+  <!-- ===== INFO ===== -->
+  <section id="v-info" class="view">
+    <div class="section-label">導遊叮嚀</div>
+    <div id="tipsList"></div>
+    <div class="section-label">行程速覽</div>
+    <div class="info-card card">
+      <h4>🛬 航班</h4>
+      <div class="kv"><span class="k">去程 8/7</span><span class="v">12:50 抵達 金浦 GMP</span></div>
+      <div class="kv"><span class="k">回程 8/11</span><span class="v">19:15 金浦起飛 · 17:00 到櫃檯</span></div>
+      <div class="kv"><span class="k">貴賓室</span><span class="v">金浦機場 PP 卡休息</span></div>
+    </div>
+    <div class="info-card card">
+      <h4>🏨 住宿</h4>
+      <div class="kv"><span class="k">8/7–8/9</span><span class="v">Ibis · 仁寺洞</span></div>
+      <div class="kv"><span class="k">8/9–8/11</span><span class="v">JW Marriott · 江南</span></div>
+    </div>
+    <div class="section-label">緊急聯絡 · 點擊撥號</div>
+    <div class="info-card card">
+      <div class="emerg">
+        <a href="tel:112"><div class="em-n">112</div><div class="em-l">警察</div></a>
+        <a href="tel:119"><div class="em-n">119</div><div class="em-l">消防·救護</div></a>
+        <a href="tel:1330"><div class="em-n">1330</div><div class="em-l">觀光諮詢<br>(中文)</div></a>
+      </div>
+      <div class="ic-body" style="margin-top:10px">1330 是韓國觀光公社的旅遊熱線,提供中文即時協助,遇到交通、翻譯、緊急狀況都能打。</div>
+    </div>
+    <div class="info-card card">
+      <h4>📱 必備 App</h4>
+      <div class="ic-body"><b>Kakao T</b> 叫車(深夜離開夜店最安全)· <b>Naver Map</b> 導航(Google Map 在韓國不好用)· <b>Papago</b> 翻譯 · <b>Kakao Metro</b> 地鐵。</div>
+    </div>
+    <div class="foot-note">首爾同行 · 祝旅途平安順利 ✦</div>
+  </section>
+
+  <!-- FAB -->
+  <button class="fab" id="fab" aria-label="新增開銷"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg></button>
+
+  <!-- Bottom nav -->
+  <nav>
+    <button class="tab active" data-view="v-itin" data-title="行程" data-eyebrow="SEOUL · 5 DAYS">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>行程</span>
+    </button>
+    <button class="tab" data-view="v-guide" data-title="指南" data-eyebrow="EAT · SEE · PLAY">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4a2 2 0 0 1-2-2z"/><path d="M12 6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-6a2 2 0 0 0-2 2"/></svg><span>指南</span>
+    </button>
+    <button class="tab" data-view="v-split" data-title="分帳" data-eyebrow="SPLIT · 3 PAX">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16v18l-2-1.5L16 21l-2-1.5L12 21l-2-1.5L8 21l-2-1.5L4 21z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>分帳</span>
+    </button>
+    <button class="tab" data-view="v-cur" data-title="匯率" data-eyebrow="KRW ⇄ TWD">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 9h6M8 13h6M10 6l4 12"/></svg><span>匯率</span>
+    </button>
+    <button class="tab" data-view="v-info" data-title="須知" data-eyebrow="GOOD TO KNOW">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>須知</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Add-expense sheet -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <h3>新增共同開銷</h3>
+  <div class="field">
+    <label>品項</label>
+    <input type="text" id="exDesc" placeholder="例：計程車、烤肉、超市採買">
+  </div>
+  <div class="field">
+    <label>金額</label>
+    <div class="amt-row">
+      <input type="number" id="exAmt" inputmode="decimal" placeholder="0">
+      <div class="cur-toggle">
+        <button id="exKRW" class="active">₩</button>
+        <button id="exTWD">NT$</button>
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <label>類別</label>
+    <div class="catseg" id="exCat"></div>
+  </div>
+  <div class="field">
+    <label>誰先付的</label>
+    <div class="seg" id="exPayer"></div>
+  </div>
+  <div class="field">
+    <label>這筆誰要分攤</label>
+    <div class="checks" id="exSplit"></div>
+  </div>
+  <button class="btn-primary" id="exSave">加入帳目</button>
+  <button class="btn-ghost" id="exCancel">取消</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const CATS = {
+  food:  {label:'美食', color:'var(--coral)',  cls:'c-food'},
+  sight: {label:'景點', color:'var(--cobalt)', cls:'c-sight'},
+  night: {label:'夜生活', color:'var(--violet)', cls:'c-night'},
+  shop:  {label:'購物', color:'var(--teal)',  cls:'c-shop'},
+  beauty:{label:'保養', color:'var(--pink)',  cls:'c-beauty'},
+  logi:  {label:'交通住宿', color:'var(--logi)', cls:'c-logi'},
+};
+function mapUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);}
+
+const DAYS = [
+ {d:'8/7', wk:'五', key:'DAY 01', title:'明洞快閃 · 靈魂音樂', sub:'抵達即開場：換錢補貨、脊骨湯暖胃,直衝梨泰院夜生活。',
+  stops:[
+   {t:'12:50', cat:'logi', title:'抵達金浦機場', place:'Gimpo Intl. GMP', note:'落地後領行李、辦交通卡,準備搭地鐵進市區。', map:'김포국제공항'},
+   {t:'14:00', cat:'logi', title:'Ibis 仁寺洞 Check-in', place:'地鐵 5 號線 · 仁寺洞', note:'放好行李、輕裝出門。', map:'ibis Ambassador Seoul Insadong'},
+   {t:'15:00', end:'18:00', cat:'shop', title:'明洞換錢 + Olive Young', place:'明洞 · 大使館換錢所', note:'先在「大使館換錢所」換韓幣,再到 Olive Young 地毯式補貨美妝、面膜、零食。', map:'명동 대사관환전소'},
+   {t:'18:30', end:'20:00', cat:'food', title:'元堂脊骨馬鈴薯湯', place:'明洞店', note:'湯頭濃郁,長途飛行後最適合恢復體力的一鍋。', map:'원당 감자탕 명동'},
+   {t:'22:00', end:'24:00', cat:'night', title:'HYDE Seoul', place:'精緻酒吧', note:'調酒風格時尚,適合開場暖身、慢慢進入夜的節奏。', map:'HYDE bar Seoul'},
+   {t:'00:00', end:'03:00', cat:'night', title:'Club GYM', place:'梨泰院 Itaewon', note:'梨泰院最夯俱樂部之一,感受首爾頂級夜生活。財物請貼身。', map:'Club GYM Itaewon'},
+  ]},
+ {d:'8/8', wk:'六', key:'DAY 02', title:'市場美食 · 夜間探險', sub:'廣藏市場開胃,DDP 感受古今交錯,晚上與韓國朋友續攤。',
+  stops:[
+   {t:'11:00', end:'13:00', cat:'food', title:'廣藏市場 早午餐', place:'綠豆煎餅 · 生牛肉', note:'首爾最經典的傳統市場,綠豆煎餅現煎最香,生牛肉配蛋黃是必試。', map:'광장시장'},
+   {t:'14:00', end:'16:00', cat:'sight', title:'DDP 東大門設計廣場', place:'步行至興仁之門', note:'Zaha Hadid 的流線建築,再散步到興仁之門,一次感受未來與古城。', map:'DDP 동대문디자인플라자'},
+   {t:'19:00', end:'21:30', cat:'food', title:'與 SUN / HAM 聚餐', place:'待通知', note:'韓國朋友帶路的一餐,地點確認後更新。', map:'서울 맛집'},
+   {t:'22:00', end:'03:00', cat:'night', title:'Bear Cave', place:'梨泰院 Itaewon', note:'獨特地下氛圍的酒吧,很適合當今晚的固定據點。', map:'Bear Cave bar Itaewon'},
+  ]},
+ {d:'8/9', wk:'日', key:'DAY 03', title:'仁寺洞漫遊 · 江南豪景', sub:'韓屋茶屋放空,換宿 JW Marriott,夜賞盤浦大橋彩虹噴泉。',
+  stops:[
+   {t:'11:00', end:'12:30', cat:'food', title:'退房 · 仁寺洞午餐', place:'Ssamzigil 三吉市場一帶', note:'退房後在三吉市場附近覓食,順逛文創小店。', map:'쌈지길 인사동'},
+   {t:'12:30', end:'14:00', cat:'sight', title:'耕仁美術館 茶屋', place:'Tea House · 韓屋', note:'隱身鬧區的絕美韓屋茶屋,點壺傳統茶在庭院發呆。', map:'경인미술관 전통다원'},
+   {t:'15:00', end:'16:30', cat:'logi', title:'JW Marriott Check-in', place:'江南', note:'入住並參觀飯店設施,享受升級的住宿。', map:'JW Marriott Hotel Seoul'},
+   {t:'16:30', end:'17:00', cat:'food', title:'行政酒廊小點', place:'VINCENT / POLAR 輪替', note:'傍晚到 Lounge 補點心與飲料,顧好體力再出門。', map:'JW Marriott Seoul executive lounge'},
+   {t:'19:00', end:'20:00', cat:'food', title:'與 DOGGI 江南晚餐', place:'江南', note:'和朋友在江南吃晚餐。', map:'강남 맛집'},
+   {t:'20:30', end:'21:30', cat:'sight', title:'盤浦大橋月光彩虹噴泉', place:'盤浦漢江公園', note:'坐在盤浦漢江公園欣賞,絕對是這趟最浪漫的一刻。', map:'반포대교 달빛무지개분수'},
+  ]},
+ {d:'8/10', wk:'一', key:'DAY 04', title:'時尚購物 · 烤肉饗宴', sub:'星空圖書館打卡、奉恩寺參拜,漢江散步,收尾樂天大採買。',
+  stops:[
+   {t:'10:00', cat:'sight', title:'星空圖書館', place:'COEX Mall', note:'超高書牆的網美圖書館,COEX 內順逛。', map:'별마당도서관 코엑스'},
+   {t:'11:30', cat:'sight', title:'奉恩寺參拜', place:'江南 · Bongeunsa', note:'摩天樓包圍中的千年古寺,鬧中取靜。', map:'봉은사'},
+   {t:'13:00', cat:'food', title:'三代蔘雞匠人', place:'午餐', note:'一整隻的人蔘雞湯,暑天以熱補熱的韓式養生。', map:'삼대삼계장인'},
+   {t:'16:00', cat:'sight', title:'漢江邊散步', place:'盤浦 / 汝矣島漢江公園', note:'回飯店寄行李後,到漢江吹風散步,租墊子躺草地也很韓。', map:'여의도한강공원'},
+   {t:'18:00', end:'20:00', cat:'shop', title:'樂天超市 大採買', place:'首爾站旁', note:'伴手禮一次補齊。週一晚人潮較少是好時機,記得帶可摺疊行李袋。', map:'롯데마트 서울역점'},
+   {t:'20:30', end:'22:00', cat:'food', title:'烤牛腸專賣', place:'奉天洞烤牛腸 / 王妃家', note:'高品質牛腸現烤,油脂香氣爆表,配燒酒收尾。', map:'봉천동 곱창'},
+  ]},
+ {d:'8/11', wk:'二', key:'DAY 05', title:'美容護理 · 完美句點', sub:'保養、燉牛排骨,取行李從容前往金浦,貴賓室休息後起飛。',
+  stops:[
+   {t:'10:30', cat:'logi', title:'退房 · 寄放行李', place:'JW Marriott', note:'Check-out 後把行李寄放櫃檯。', map:'JW Marriott Hotel Seoul'},
+   {t:'11:30', cat:'beauty', title:'수앤모 성형외과 保養', place:'美容診所 · 江南', note:'三人預計 2 小時完成保養。建議出發前一週請飯店協助再確認預約。', map:'수앤모의원 강남'},
+   {t:'13:30', end:'14:30', cat:'food', title:'강남면옥 江南麵屋', place:'午餐', note:'燉牛排骨(갈비찜)是必吃亮點,冷麵解暑也一流。', map:'강남면옥'},
+   {t:'16:00', cat:'logi', title:'取行李 · 前往金浦', place:'地鐵 → GMP', note:'回飯店取行李,搭地鐵前往機場,預留充裕時間。', map:'김포국제공항'},
+   {t:'17:00', cat:'logi', title:'金浦 Check-in · 貴賓室', place:'GMP', note:'櫃檯報到後,用 PP 卡到貴賓室休息、補貨。', map:'김포국제공항 라운지'},
+   {t:'19:15', cat:'logi', title:'航班起飛', place:'返程', note:'首爾,再見!', map:'김포국제공항'},
+  ]},
+];
+
+const PLACES = [
+ {cat:'food', name:'廣藏市場', en:'Gwangjang Market', desc:'首爾最有生命力的傳統市場,綠豆煎餅、生牛肉、麻藥紫菜飯捲一路吃過去,是體驗庶民美食的第一站。', tip:'現煎的綠豆煎餅要趁熱吃,生牛肉(육회)配生蛋黃拌開最經典。', map:'광장시장'},
+ {cat:'food', name:'元堂脊骨馬鈴薯湯', en:'Wondang Gamjatang', desc:'明洞的骨頭湯名店,湯頭濃郁、肉大塊,長途飛行後暖胃補元氣的首選。', tip:'把脊骨上的肉挑乾淨,再用湯泡飯,一鍋抵一餐。', map:'원당 감자탕 명동'},
+ {cat:'food', name:'三代蔘雞匠人', en:'Samdae Samgyetang', desc:'整隻雞燉到軟爛的人蔘雞湯,肚裡塞著糯米,是韓國夏天「以熱補熱」的養生名物。', tip:'先喝原湯,再自行加鹽與胡椒調味。', map:'삼대삼계장인'},
+ {cat:'food', name:'烤牛腸專賣', en:'Gopchang', desc:'奉天洞烤牛腸或明洞「王妃家」都以高品質牛腸聞名,現烤油脂香氣十足,配燒酒一流。', tip:'讓店員代烤火候最剛好,最後用剩油炒飯別錯過。', map:'봉천동 곱창'},
+ {cat:'food', name:'강남면옥 江南麵屋', en:'Gangnam Myeonok', desc:'江南老字號,燉牛排骨(갈비찜)軟糯入味是招牌,平壤式冷麵清爽解暑。', tip:'兩人以上建議一份갈비찜配一份冷麵分著吃。', map:'강남면옥'},
+ {cat:'food', name:'耕仁美術館 茶屋', en:'Gyeongin Tea House', desc:'仁寺洞巷弄裡的韓屋茶屋,老木結構圍出一方庭院,適合逛累後點壺傳統茶靜坐。', tip:'午後陽光斜進庭院時最美,是拍照與放空的好時段。', map:'경인미술관 전통다원'},
+ {cat:'sight', name:'盤浦大橋月光彩虹噴泉', en:'Banpo Rainbow Fountain', desc:'世界最長的橋樑噴泉,夜間隨音樂噴出彩虹水幕,是漢江的招牌浪漫。', tip:'坐在盤浦漢江公園草地正對橋面欣賞,夏季通常一晚多場,傍晚後開始。', map:'반포대교 달빛무지개분수'},
+ {cat:'sight', name:'星空圖書館', en:'Starfield Library', desc:'COEX Mall 中庭高達十幾公尺的巨型書牆,免費開放,是首爾最好拍的室內景點之一。', tip:'挑人少的上午去,退到二樓走廊可拍到整片書牆。', map:'별마당도서관 코엑스'},
+ {cat:'sight', name:'奉恩寺', en:'Bongeunsa Temple', desc:'被江南摩天樓環抱的千年古剎,古今對比強烈,鬧中取靜。', tip:'免費入場,對面就是 COEX,可與星空圖書館串成半日行程。', map:'봉은사'},
+ {cat:'sight', name:'DDP 東大門設計廣場', en:'Dongdaemun Design Plaza', desc:'Zaha Hadid 設計的銀色流線建築,白天是設計地標,入夜燈光更科幻,旁邊就是古城門興仁之門。', tip:'從 DDP 步行到興仁之門,可一次收進「未來與古城」的畫面。', map:'DDP 동대문디자인플라자'},
+ {cat:'sight', name:'仁寺洞 · 三吉市場', en:'Insadong Ssamzigil', desc:'傳統與文創交會的老街,螺旋式建築 Ssamzigil 裡藏滿手作小店與咖啡館。', tip:'邊逛邊吃街邊小食,買點韓風紀念品很合適。', map:'쌈지길 인사동'},
+ {cat:'night', name:'HYDE Seoul', en:'HYDE Bar', desc:'風格時尚的精緻酒吧,調酒細膩,適合當作夜生活的暖身第一攤。', tip:'早一點到座位較從容,先在這裡定調再前進梨泰院。', map:'HYDE bar Seoul'},
+ {cat:'night', name:'Club GYM', en:'Club GYM Itaewon', desc:'梨泰院人氣俱樂部,音樂強、人潮旺,體驗首爾頂級夜生活的代表之一。', tip:'財物貼身、三人結伴,深夜離場用 Kakao T 叫車最安全。', map:'Club GYM Itaewon'},
+ {cat:'night', name:'Bear Cave', en:'Bear Cave Itaewon', desc:'梨泰院一家帶有地下洞穴感的酒吧,氛圍獨特,很適合當整晚的固定據點。', tip:'人多時把手機訊號與集合點先講好。', map:'Bear Cave bar Itaewon'},
+ {cat:'shop', name:'Olive Young 明洞', en:'Olive Young Myeongdong', desc:'韓國最大美妝連鎖,面膜、保養、彩妝、零食一站買齊,常有買一送一。', tip:'旗艦店品項最全,滿額可辦退稅,行李預留空間。', map:'올리브영 명동'},
+ {cat:'shop', name:'樂天超市 首爾站', en:'Lotte Mart Seoul', desc:'伴手禮大本營:海苔、餅乾、泡麵、辛拉麵、燒酒一次補足。', tip:'週一晚人潮較少最好逛,結帳後可寄放或直接打包,帶個摺疊行李袋。', map:'롯데마트 서울역점'},
+ {cat:'beauty', name:'수앤모 성형외과', en:'Su&Mo Clinic', desc:'江南美容診所,做臉部保養護理,三人約 2 小時完成,行程尾聲把狀態調到最好。', tip:'務必提前預約,建議出發前一週請飯店櫃台再幫忙確認一次。', map:'수앤모의원 강남'},
+];
+
+const TIPS = [
+ {n:'01', t:'夜店安全', b:'梨泰院的 Club 人潮擁擠,財物請務必貼身存放。三人保持手機訊號暢通,約好走散時的集合點。'},
+ {n:'02', t:'交通備案', b:'首爾地鐵週末非常方便;但若深夜離開 Club,建議直接用 Kakao T(韓版 Uber)叫車回飯店,確保安全。'},
+ {n:'03', t:'提前確認預約', b:'美容診所與熱門餐廳,建議出發前一週請飯店櫃台協助再次確認預約狀態,避免撲空。'},
+ {n:'04', t:'採買時機', b:'樂天超市週一晚上人潮較少,是最好的採買時機。戰利品若太重,記得帶個可摺疊行李袋。'},
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const LS = {
+  read(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  write(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+let names   = LS.read('sm_names', ['我','旅伴 A','旅伴 B']);
+let expenses= LS.read('sm_exp', []);
+let rate    = LS.read('sm_rate', {krwToTwd:0.0234, time:null});  // 1 KRW = x TWD (approx fallback)
+let settleCur = LS.read('sm_settle','KRW'); // settlement currency for split view
+
+/* ============================================================
+   TABS
+   ============================================================ */
+const views = document.querySelectorAll('.view');
+const tabs  = document.querySelectorAll('.tab');
+tabs.forEach(tab=>tab.addEventListener('click',()=>{
+  const id = tab.dataset.view;
+  views.forEach(v=>v.classList.toggle('active', v.id===id));
+  tabs.forEach(t=>t.classList.toggle('active', t===tab));
+  document.getElementById('hd-title').textContent = tab.dataset.title;
+  document.getElementById('hd-eyebrow').textContent = tab.dataset.eyebrow;
+  window.scrollTo({top:0});
+}));
+
+/* ============================================================
+   ITINERARY
+   ============================================================ */
+let curDay = 0;
+function renderDaySwitch(){
+  const el = document.getElementById('daySwitch');
+  el.innerHTML = DAYS.map((d,i)=>`
+    <button class="day-btn ${i===curDay?'active':''}" data-i="${i}">
+      <div class="db-d">${d.key} · ${d.wk}</div>
+      <div class="db-n">${d.d}</div>
+    </button>`).join('');
+  el.querySelectorAll('.day-btn').forEach(b=>b.addEventListener('click',()=>{
+    curDay=+b.dataset.i; renderDaySwitch(); renderDay();
+    document.getElementById('dayContent').scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+}
+function renderDay(){
+  const d = DAYS[curDay];
+  const stops = d.stops.map(s=>{
+    const c = CATS[s.cat];
+    const time = s.end ? `${s.t}<small>– ${s.end}</small>` : s.t;
+    return `<div class="stop ${c.cls}" style="--c:${c.color}">
+      <div class="time">${time}</div>
+      <div class="rail"><div class="node"></div></div>
+      <div class="stop-body">
+        <div class="stop-title">${s.title}<span class="chip tag ${c.cls}" style="--c:${c.color}"><span class="dot" style="background:${c.color}"></span>${c.label}</span></div>
+        <div class="stop-place">${s.place}</div>
+        <div class="stop-note">${s.note}</div>
+        <div class="stop-foot">
+          <a class="maplink" href="${mapUrl(s.map)}" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>地圖
+          </a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('dayContent').innerHTML = `
+    <div class="day-head">
+      <div class="dh-k">${d.key} · 8/${d.d.split('/')[1]} (${d.wk})</div>
+      <div class="dh-t">${d.title}</div>
+      <div class="dh-s">${d.sub}</div>
+    </div>
+    <div class="line">${stops}</div>`;
+}
+
+/* ============================================================
+   GUIDE
+   ============================================================ */
+let guideFilter='all';
+function renderGuideFilters(){
+  const el=document.getElementById('guideFilters');
+  const items=[['all','全部','var(--ink)'],
+    ...Object.entries(CATS).map(([k,v])=>[k,v.label,v.color])];
+  el.innerHTML=items.map(([k,label,col])=>`
+    <button class="filt ${k===guideFilter?'active':''}" data-k="${k}">
+      ${k!=='all'?`<span class="dot" style="background:${col}"></span>`:''}${label}
+    </button>`).join('');
+  el.querySelectorAll('.filt').forEach(b=>b.addEventListener('click',()=>{
+    guideFilter=b.dataset.k; renderGuideFilters(); renderGuide();
+  }));
+}
+function renderGuide(){
+  const list=PLACES.filter(p=>guideFilter==='all'||p.cat===guideFilter);
+  document.getElementById('guideList').innerHTML=list.map(p=>{
+    const c=CATS[p.cat];
+    return `<div class="place card ${c.cls}" style="--c:${c.color}">
+      <div class="place-top">
+        <div>
+          <div class="place-name">${p.name}</div>
+          <div class="place-en">${p.en}</div>
+        </div>
+        <span class="chip tag ${c.cls}" style="--c:${c.color}"><span class="dot" style="background:${c.color}"></span>${c.label}</span>
+      </div>
+      <div class="place-desc">${p.desc}</div>
+      <div class="place-tip"><b>Tip.</b> ${p.tip}</div>
+      <div class="place-foot">
+        <a class="maplink" href="${mapUrl(p.map)}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>在地圖開啟
+        </a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   TIPS
+   ============================================================ */
+function renderTips(){
+  document.getElementById('tipsList').innerHTML=TIPS.map(t=>`
+    <div class="info-card card">
+      <h4><span class="tip-num">${t.n}</span> ${t.t}</h4>
+      <div class="ic-body">${t.b}</div>
+    </div>`).join('');
+}
+
+/* ============================================================
+   CURRENCY
+   ============================================================ */
+const fmt = (n,dp=0)=> n.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+function krwToTwd(k){return k*rate.krwToTwd;}
+function twdToKrw(t){return t/rate.krwToTwd;}
+
+function renderRateUI(){
+  const perThousand = krwToTwd(1000);
+  document.getElementById('rateBig').textContent = rate.krwToTwd.toFixed(4);
+  document.getElementById('rateSub').textContent = `₩1,000 ≈ NT$${perThousand.toFixed(1)}  ·  NT$100 ≈ ₩${fmt(twdToKrw(100))}`;
+  document.getElementById('rateTime').textContent = rate.time
+    ? '更新於 '+rate.time : '尚未更新 · 顯示參考值';
+  // quick ref
+  const amounts=[1000,5000,10000,30000,50000,100000];
+  document.getElementById('qrGrid').innerHTML=amounts.map(a=>`
+    <div class="qr"><div class="qr-w">₩ ${fmt(a)}</div><div class="qr-t">≈ NT$ ${fmt(krwToTwd(a),krwToTwd(a)<100?1:0)}</div></div>`).join('');
+  recompute();
+}
+function recompute(){
+  const k=parseFloat(document.getElementById('inKRW').value)||0;
+  document.getElementById('inTWD').value = k? +krwToTwd(k).toFixed(2):'';
+}
+document.getElementById('inKRW').addEventListener('input',()=>{
+  const k=parseFloat(document.getElementById('inKRW').value)||0;
+  document.getElementById('inTWD').value=k? +krwToTwd(k).toFixed(2):'';
+});
+document.getElementById('inTWD').addEventListener('input',()=>{
+  const t=parseFloat(document.getElementById('inTWD').value)||0;
+  document.getElementById('inKRW').value=t? Math.round(twdToKrw(t)):'';
+});
+document.getElementById('swapBtn').addEventListener('click',()=>{
+  const a=document.getElementById('inKRW'), b=document.getElementById('inTWD');
+  const av=a.value; a.value=b.value?Math.round(twdToKrw(parseFloat(b.value))):''; // recompute both
+  const kv=parseFloat(a.value)||0; b.value=kv?+krwToTwd(kv).toFixed(2):'';
+  toast('已對調換算方向');
+});
+
+async function fetchRate(){
+  const btn=document.getElementById('refreshRate');
+  btn.style.opacity=.5;
+  try{
+    const r=await fetch('https://open.er-api.com/v6/latest/KRW',{cache:'no-store'});
+    const j=await r.json();
+    if(j&&j.rates&&j.rates.TWD){
+      rate.krwToTwd=j.rates.TWD;
+      const dt=new Date(j.time_last_update_unix?j.time_last_update_unix*1000:Date.now());
+      rate.time=dt.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      LS.write('sm_rate',rate);
+      document.getElementById('offNote').classList.remove('show');
+      renderRateUI(); renderSplit();
+      toast('匯率已更新');
+    } else throw new Error('bad');
+  }catch(e){
+    document.getElementById('offNote').classList.add('show');
+    renderRateUI();
+  }finally{ btn.style.opacity=1; }
+}
+document.getElementById('refreshRate').addEventListener('click',fetchRate);
+
+/* ============================================================
+   SPLIT
+   ============================================================ */
+function expInBase(e, cur){ // return amount in `cur` (KRW or TWD)
+  let krw = e.cur==='KRW'? e.amt : twdToKrw(e.amt);
+  return cur==='KRW'? krw : krwToTwd(krw);
+}
+function curSym(c){return c==='KRW'?'₩':'NT$';}
+
+function computeBalances(){
+  // balance[i] = paid - owed, in settleCur
+  const bal=[0,0,0];
+  expenses.forEach(e=>{
+    const amt = expInBase(e, settleCur);
+    const sp = e.split.filter(x=>x); const n=sp.length||1;
+    const share = amt/n;
+    bal[e.payer]+=amt;
+    e.split.forEach((on,i)=>{ if(on) bal[i]-=share; });
+  });
+  return bal;
+}
+function settleTransfers(bal){
+  const b=bal.map((v,i)=>({i,v:Math.round(v)}));
+  const debt=b.filter(x=>x.v<0).map(x=>({i:x.i,v:-x.v})).sort((a,z)=>z.v-a.v);
+  const cred=b.filter(x=>x.v>0).map(x=>({...x})).sort((a,z)=>z.v-a.v);
+  const out=[];
+  let di=0,ci=0;
+  while(di<debt.length&&ci<cred.length){
+    const pay=Math.min(debt[di].v,cred[ci].v);
+    if(pay>0) out.push({from:debt[di].i,to:cred[ci].i,amt:pay});
+    debt[di].v-=pay; cred[ci].v-=pay;
+    if(debt[di].v<=0.5)di++; if(cred[ci].v<=0.5)ci++;
+  }
+  return out;
+}
+
+function renderSplit(){
+  // total in settleCur
+  let total=0; expenses.forEach(e=>total+=expInBase(e,settleCur));
+  document.getElementById('stTotal').textContent = curSym(settleCur)+fmt(total, settleCur==='TWD'?0:0);
+  document.getElementById('stCount').textContent = expenses.length;
+
+  // people board
+  const bal=computeBalances();
+  document.getElementById('peopleBoard').innerHTML=names.map((nm,i)=>{
+    const v=Math.round(bal[i]);
+    const cls=v>0?'pos':v<0?'neg':'zero';
+    const sub=v>0?'應收回':v<0?'應付出':'已結清';
+    const disp=(v>0?'+':'')+curSym(settleCur)+fmt(Math.abs(v));
+    return `<div class="person">
+      <input class="p-name" data-i="${i}" value="${nm}" maxlength="6">
+      <div class="p-bal ${cls}">${v===0?'—':disp}</div>
+      <div class="p-sub">${sub}</div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.p-name').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      names[+inp.dataset.i]=inp.value.trim()||('旅伴 '+inp.dataset.i);
+      LS.write('sm_names',names); renderSplit();
+    });
+  });
+
+  // settle box
+  const tr=settleTransfers(bal);
+  document.getElementById('settleBox').innerHTML = tr.length
+    ? tr.map(t=>`<div class="settle-row">
+        <span>${names[t.from]}</span><span class="arw">→</span><span>${names[t.to]}</span>
+        <span class="amt">${curSym(settleCur)}${fmt(t.amt)}</span></div>`).join('')
+      + `<div class="settle-row" style="border:none;padding-top:10px">
+          <button class="chip" style="background:var(--cobalt-wash);color:var(--cobalt-d)" onclick="toggleSettleCur()">結算幣別：${settleCur==='KRW'?'韓幣 ₩':'台幣 NT$'} · 點我切換</button></div>`
+    : `<div class="settle-empty">目前沒有需要結算的款項 🎉</div>
+       <div class="settle-row" style="border:none;justify-content:center;padding-top:6px">
+         <button class="chip" style="background:var(--cobalt-wash);color:var(--cobalt-d)" onclick="toggleSettleCur()">結算幣別：${settleCur==='KRW'?'韓幣 ₩':'台幣 NT$'} · 點我切換</button></div>`;
+
+  // expense list
+  const el=document.getElementById('expList');
+  if(!expenses.length){
+    el.innerHTML=`<div class="empty"><div class="e-emo">🧾</div>
+      <div class="e-t">還沒有共同開銷</div>
+      <div class="e-s">一起付錢時,按右下角 ＋ 記一筆</div></div>`;
+    return;
+  }
+  el.innerHTML=[...expenses].reverse().map(e=>{
+    const c=CATS[e.cat]||CATS.food;
+    const splitNames=e.split.map((on,i)=>on?names[i]:null).filter(Boolean);
+    const alt = e.cur==='KRW'
+      ? 'NT$'+fmt(krwToTwd(e.amt),1)
+      : '₩'+fmt(twdToKrw(e.amt));
+    return `<div class="exp-item card">
+      <div class="exp-cat" style="background:${c.color}"></div>
+      <div class="exp-main">
+        <div class="exp-desc">${e.desc||c.label}</div>
+        <div class="exp-meta">${names[e.payer]} 付 · 分 ${splitNames.length} 人 (${splitNames.join('、')})</div>
+      </div>
+      <div class="exp-amt">
+        <div class="ea-main">${curSym(e.cur)}${fmt(e.amt, e.cur==='TWD'?0:0)}</div>
+        <div class="ea-sub">≈ ${alt}</div>
+      </div>
+      <button class="exp-del" data-id="${e.id}" aria-label="刪除">×</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.exp-del').forEach(b=>b.addEventListener('click',()=>{
+    expenses=expenses.filter(x=>x.id!=b.dataset.id);
+    LS.write('sm_exp',expenses); renderSplit(); toast('已刪除一筆');
+  }));
+}
+window.toggleSettleCur=function(){
+  settleCur = settleCur==='KRW'?'TWD':'KRW';
+  LS.write('sm_settle',settleCur); renderSplit();
+  toast('結算幣別：'+(settleCur==='KRW'?'韓幣':'台幣'));
+};
+
+/* ---- Add-expense sheet ---- */
+let draft={cur:'KRW',cat:'food',payer:0,split:[true,true,true]};
+function openSheet(){
+  draft={cur:'KRW',cat:'food',payer:0,split:[true,true,true]};
+  document.getElementById('exDesc').value='';
+  document.getElementById('exAmt').value='';
+  document.getElementById('exKRW').classList.add('active');
+  document.getElementById('exTWD').classList.remove('active');
+  buildCatSeg(); buildPayer(); buildSplit();
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('scrim').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+}
+function buildCatSeg(){
+  document.getElementById('exCat').innerHTML=Object.entries(CATS)
+    .filter(([k])=>k!=='logi')
+    .map(([k,v])=>`<button data-k="${k}" class="${draft.cat===k?'active':''}" style="--c:${v.color}"><span class="dot" style="background:${v.color}"></span>${v.label}</button>`).join('');
+  document.querySelectorAll('#exCat button').forEach(b=>b.addEventListener('click',()=>{
+    draft.cat=b.dataset.k; buildCatSeg();
+  }));
+}
+function buildPayer(){
+  document.getElementById('exPayer').innerHTML=names.map((n,i)=>
+    `<button data-i="${i}" class="${draft.payer===i?'active':''}">${n}</button>`).join('');
+  document.querySelectorAll('#exPayer button').forEach(b=>b.addEventListener('click',()=>{
+    draft.payer=+b.dataset.i; buildPayer();
+  }));
+}
+function buildSplit(){
+  document.getElementById('exSplit').innerHTML=names.map((n,i)=>
+    `<button data-i="${i}" class="${draft.split[i]?'on':''}">${n}</button>`).join('');
+  document.querySelectorAll('#exSplit button').forEach(b=>b.addEventListener('click',()=>{
+    const i=+b.dataset.i; draft.split[i]=!draft.split[i];
+    if(!draft.split.some(x=>x)) draft.split[i]=true; // keep at least one
+    buildSplit();
+  }));
+}
+document.getElementById('exKRW').addEventListener('click',()=>{draft.cur='KRW';document.getElementById('exKRW').classList.add('active');document.getElementById('exTWD').classList.remove('active');});
+document.getElementById('exTWD').addEventListener('click',()=>{draft.cur='TWD';document.getElementById('exTWD').classList.add('active');document.getElementById('exKRW').classList.remove('active');});
+document.getElementById('fab').addEventListener('click',openSheet);
+document.getElementById('exCancel').addEventListener('click',closeSheet);
+document.getElementById('scrim').addEventListener('click',closeSheet);
+document.getElementById('exSave').addEventListener('click',()=>{
+  const amt=parseFloat(document.getElementById('exAmt').value);
+  if(!amt||amt<=0){ toast('請輸入金額'); return; }
+  expenses.push({
+    id:Date.now()+''+Math.floor(Math.random()*99),
+    desc:document.getElementById('exDesc').value.trim(),
+    amt, cur:draft.cur, cat:draft.cat, payer:draft.payer,
+    split:[...draft.split]
+  });
+  LS.write('sm_exp',expenses);
+  closeSheet(); renderSplit(); toast('已加入一筆帳目');
+});
+
+/* ---- toast ---- */
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1700);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderDaySwitch(); renderDay();
+renderGuideFilters(); renderGuide();
+renderTips();
+renderRateUI(); renderSplit();
+fetchRate();
+
+/* service worker */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
