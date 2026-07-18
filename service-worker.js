@@ -1,5 +1,5 @@
 /* 首爾同行 — offline app shell (network-first for HTML) */
-const CACHE = 'seoul-trip-v5';
+const CACHE = 'seoul-trip-v6';
 const ASSETS = [
   './',
   './index.html',

@@ -168,7 +168,9 @@ nav{
 .filt{flex:none;font-size:12.5px;font-weight:700;padding:7px 13px;border-radius:999px;background:var(--paper2);border:1px solid var(--line);color:var(--ink2);transition:.2s;display:inline-flex;align-items:center;gap:6px}
 .filt.active{background:var(--sel-bg);color:var(--sel-tx);border-color:var(--sel-bg)}
 .filt.active .dot{box-shadow:0 0 0 2px rgba(255,255,255,.35)}
-.place{padding:15px 16px;margin-top:12px}
+.place{padding:15px 16px;margin-top:12px;overflow:hidden}
+.place-art{margin:-15px -16px 13px;height:108px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--c) 9%,var(--card))}
+.place-art svg{width:100%;height:100%;display:block}
 .place-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .place-name{font-family:var(--disp);font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.15}
 .place-en{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink3);margin-top:3px;text-transform:uppercase}
@@ -474,6 +476,132 @@ const CATS = {
 };
 function mapUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);}
 
+/* ---- original SVG banner art (inherits --c from card) ---- */
+const ART = {
+market: `<g stroke-linecap="round">
+  <rect x="0" y="0" width="400" height="26" fill="var(--c)" opacity=".85"/>
+  ${[0,1,2,3,4,5,6,7].map(i=>`<path d="M${i*50},26 a25,14 0 0 0 50,0 z" fill="var(--c)" opacity="${i%2?'.85':'.45'}"/>`).join('')}
+  <rect x="46" y="86" width="70" height="42" rx="5" fill="none" stroke="var(--ink3)" stroke-width="3"/>
+  <circle cx="66" cy="80" r="9" fill="var(--c)" opacity=".8"/><circle cx="86" cy="78" r="9" fill="var(--c)" opacity=".5"/><circle cx="103" cy="82" r="8" fill="var(--c)" opacity=".8"/>
+  <rect x="166" y="78" width="70" height="50" rx="5" fill="none" stroke="var(--ink3)" stroke-width="3"/>
+  <path d="M176,78 v-12 m20,12 v-16 m20,16 v-13" stroke="var(--c)" stroke-width="5"/>
+  <rect x="286" y="90" width="70" height="38" rx="5" fill="none" stroke="var(--ink3)" stroke-width="3"/>
+  <circle cx="306" cy="84" r="8" fill="var(--c)" opacity=".6"/><circle cx="326" cy="81" r="9" fill="var(--c)" opacity=".85"/><circle cx="344" cy="85" r="7" fill="var(--c)" opacity=".5"/>
+</g>`,
+soup: `<g fill="none" stroke-linecap="round">
+  <path d="M110,86 a90,44 0 0 0 180,0 z" fill="var(--c)" opacity=".8"/>
+  <ellipse cx="200" cy="86" rx="90" ry="12" fill="var(--card)" stroke="var(--c)" stroke-width="4"/>
+  <path d="M172,64 q-9,-12 0,-24 q9,-12 0,-22" stroke="var(--ink3)" stroke-width="4"/>
+  <path d="M202,66 q-10,-13 0,-26 q10,-13 0,-24" stroke="var(--ink3)" stroke-width="4"/>
+  <path d="M232,64 q-9,-12 0,-24 q9,-12 0,-22" stroke="var(--ink3)" stroke-width="4"/>
+</g>`,
+noodle: `<g fill="none" stroke-linecap="round">
+  <path d="M120,92 a80,40 0 0 0 160,0 z" fill="var(--c)" opacity=".8"/>
+  <ellipse cx="200" cy="92" rx="80" ry="11" fill="var(--card)" stroke="var(--c)" stroke-width="4"/>
+  <line x1="236" y1="18" x2="196" y2="88" stroke="var(--ink3)" stroke-width="4"/>
+  <line x1="252" y1="22" x2="212" y2="88" stroke="var(--ink3)" stroke-width="4"/>
+  <path d="M180,90 q-6,-26 8,-44 M198,92 q-2,-28 12,-46 M216,90 q2,-24 16,-40" stroke="var(--c)" stroke-width="3.5" opacity=".9"/>
+</g>`,
+grill: `<g fill="none" stroke-linecap="round">
+  <circle cx="200" cy="150" r="96" stroke="var(--ink3)" stroke-width="4"/>
+  <circle cx="200" cy="150" r="72" stroke="var(--c)" stroke-width="3" opacity=".7"/>
+  <path d="M136,128 h128 M128,150 h144 M150,106 h100" stroke="var(--c)" stroke-width="3.5" opacity=".85"/>
+  <path d="M160,66 q5,-10 0,-20 M200,60 q5,-10 0,-20 M240,66 q5,-10 0,-20" stroke="var(--ink3)" stroke-width="4"/>
+</g>`,
+hanok: `<g fill="none" stroke-linecap="round">
+  <path d="M14,112 Q200,10 386,112" stroke="var(--c)" stroke-width="6"/>
+  <path d="M44,112 Q200,36 356,112" stroke="var(--ink3)" stroke-width="3.5"/>
+  <line x1="110" y1="112" x2="110" y2="140" stroke="var(--ink3)" stroke-width="4"/>
+  <line x1="200" y1="106" x2="200" y2="140" stroke="var(--ink3)" stroke-width="4"/>
+  <line x1="290" y1="112" x2="290" y2="140" stroke="var(--ink3)" stroke-width="4"/>
+  <circle cx="200" cy="22" r="6" fill="var(--c)"/>
+</g>`,
+temple: `<g fill="none" stroke-linecap="round">
+  <path d="M30,96 Q200,4 370,96" stroke="var(--c)" stroke-width="6"/>
+  <line x1="90" y1="96" x2="90" y2="140" stroke="var(--ink3)" stroke-width="4"/>
+  <line x1="310" y1="96" x2="310" y2="140" stroke="var(--ink3)" stroke-width="4"/>
+  <g stroke="var(--c)" stroke-width="3">
+    <line x1="150" y1="96" x2="150" y2="112"/><circle cx="150" cy="122" r="10" fill="var(--c)" opacity=".8"/>
+    <line x1="200" y1="90" x2="200" y2="108"/><circle cx="200" cy="119" r="11" fill="var(--c)"/>
+    <line x1="250" y1="96" x2="250" y2="112"/><circle cx="250" cy="122" r="10" fill="var(--c)" opacity=".8"/>
+  </g>
+</g>`,
+lantern: `<g stroke-linecap="round">
+  <path d="M0,26 Q200,54 400,26" fill="none" stroke="var(--ink3)" stroke-width="3"/>
+  ${[[90,44,'.85'],[200,52,'1'],[310,44,'.85']].map(([x,y,o])=>`
+    <line x1="${x}" y1="${y-14}" x2="${x}" y2="${y}" stroke="var(--ink3)" stroke-width="3"/>
+    <rect x="${x-20}" y="${y}" width="40" height="52" rx="16" fill="var(--c)" opacity="${o}"/>
+    <line x1="${x}" y1="${y+52}" x2="${x}" y2="${y+66}" stroke="var(--c)" stroke-width="3"/>`).join('')}
+</g>`,
+fountain: `<g fill="none" stroke-linecap="round">
+  <circle cx="336" cy="30" r="16" fill="var(--c)" opacity=".55" stroke="none"/>
+  <rect x="0" y="52" width="400" height="12" fill="var(--ink3)" opacity=".9"/>
+  <line x1="70" y1="64" x2="70" y2="96" stroke="var(--ink3)" stroke-width="8"/>
+  <line x1="200" y1="64" x2="200" y2="96" stroke="var(--ink3)" stroke-width="8"/>
+  <line x1="330" y1="64" x2="330" y2="96" stroke="var(--ink3)" stroke-width="8"/>
+  ${[40,100,160,220,280,340].map((x,i)=>`<path d="M${x},64 q14,34 -6,66" stroke="var(--c)" stroke-width="3.5" opacity="${.45+.09*i}" stroke-dasharray="1 7"/>`).join('')}
+</g>`,
+books: `<g>
+  ${[[14,58],[40,44],[64,66],[92,38],[118,54],[144,70],[170,42],[196,60],[222,48],[248,68],[274,40],[300,56],[326,64],[352,46]].map(([x,h],i)=>
+    `<rect x="${x}" y="${140-h-26}" width="18" height="${h}" rx="3" fill="${i%3===1?'var(--c)':'var(--ink3)'}" opacity="${i%3===1?'.9':'.55'}"/>`).join('')}
+  <rect x="0" y="118" width="400" height="5" fill="var(--c)"/>
+</g>`,
+ddp: `<g fill="none">
+  <ellipse cx="150" cy="120" rx="150" ry="58" fill="var(--c)" opacity=".28"/>
+  <ellipse cx="260" cy="132" rx="170" ry="62" fill="var(--c)" opacity=".45"/>
+  <path d="M-10,96 Q140,28 410,86" stroke="var(--c)" stroke-width="4"/>
+  ${[60,110,160,210,260,310].map(x=>`<circle cx="${x}" cy="${96-(x/8)%14}" r="2.6" fill="var(--ink3)"/>`).join('')}
+</g>`,
+neon: `<g fill="none" stroke-linecap="round">
+  <circle cx="330" cy="34" r="15" stroke="var(--c)" stroke-width="3" opacity=".5"/>
+  <path d="M150,96 L200,40 L250,96 z" stroke="var(--c)" stroke-width="9" opacity=".22"/>
+  <path d="M150,96 L200,40 L250,96 z" stroke="var(--c)" stroke-width="3.5"/>
+  <line x1="200" y1="96" x2="200" y2="126" stroke="var(--c)" stroke-width="3.5"/>
+  <line x1="178" y1="126" x2="222" y2="126" stroke="var(--c)" stroke-width="3.5"/>
+  <circle cx="212" cy="58" r="5" fill="var(--c)"/>
+  <path d="M76,40 l4,10 10,4 -10,4 -4,10 -4,-10 -10,-4 10,-4 z" fill="var(--c)" opacity=".8"/>
+</g>`,
+club: `<g stroke-linecap="round">
+  ${[[46,36],[86,64],[126,48],[166,84],[206,56],[246,92],[286,44],[326,70]].map(([x,h])=>
+    `<line x1="${x}" y1="128" x2="${x}" y2="${128-h}" stroke="var(--c)" stroke-width="14" opacity="${h>60?'1':'.55'}"/>`).join('')}
+  <circle cx="66" cy="30" r="4" fill="var(--ink3)"/><circle cx="196" cy="22" r="4" fill="var(--ink3)"/><circle cx="316" cy="26" r="4" fill="var(--ink3)"/>
+</g>`,
+cave: `<g fill="none" stroke-linecap="round">
+  <path d="M60,140 a140,120 0 0 1 280,0" stroke="var(--ink3)" stroke-width="4"/>
+  <path d="M100,140 a100,88 0 0 1 200,0" stroke="var(--c)" stroke-width="4" opacity=".7"/>
+  <path d="M140,140 a60,56 0 0 1 120,0" fill="var(--c)" opacity=".85"/>
+  <circle cx="168" cy="52" r="13" fill="var(--ink3)"/><circle cx="232" cy="52" r="13" fill="var(--ink3)"/>
+</g>`,
+beauty: `<g stroke-linecap="round">
+  <rect x="96" y="58" width="44" height="70" rx="10" fill="var(--c)" opacity=".85"/>
+  <rect x="108" y="40" width="20" height="18" rx="4" fill="var(--ink3)"/>
+  <rect x="178" y="76" width="52" height="52" rx="12" fill="none" stroke="var(--c)" stroke-width="4"/>
+  <rect x="172" y="62" width="64" height="14" rx="7" fill="var(--c)" opacity=".6"/>
+  <rect x="268" y="48" width="34" height="80" rx="9" fill="none" stroke="var(--ink3)" stroke-width="4"/>
+  <path d="M330,32 l4,11 11,4 -11,4 -4,11 -4,-11 -11,-4 11,-4 z" fill="var(--c)"/>
+  <path d="M64,90 l3,8 8,3 -8,3 -3,8 -3,-8 -8,-3 8,-3 z" fill="var(--c)" opacity=".7"/>
+</g>`,
+clinic: `<g stroke-linecap="round">
+  <path d="M200,34 q34,34 34,58 a34,34 0 0 1 -68,0 q0,-24 34,-58 z" fill="var(--c)" opacity=".85"/>
+  <path d="M188,92 a14,14 0 0 0 14,14" fill="none" stroke="var(--card)" stroke-width="4"/>
+  <path d="M296,44 l4,11 11,4 -11,4 -4,11 -4,-11 -11,-4 11,-4 z" fill="var(--c)"/>
+  <path d="M104,66 l3,9 9,3 -9,3 -3,9 -3,-9 -9,-3 9,-3 z" fill="var(--c)" opacity=".7"/>
+</g>`,
+cart: `<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M96,42 h26 l18,58 h130 l20,-44 h-158" stroke="var(--ink3)" stroke-width="5"/>
+  <circle cx="152" cy="120" r="10" stroke="var(--ink3)" stroke-width="5"/>
+  <circle cx="248" cy="120" r="10" stroke="var(--ink3)" stroke-width="5"/>
+  <rect x="168" y="34" width="26" height="22" rx="4" fill="var(--c)" opacity=".85"/>
+  <rect x="200" y="28" width="26" height="28" rx="4" fill="var(--c)" opacity=".55"/>
+  <rect x="232" y="38" width="24" height="18" rx="4" fill="var(--c)"/>
+</g>`,
+};
+function artBanner(key){
+  const inner = ART[key];
+  if (!inner) return '';
+  return `<div class="place-art"><svg viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${inner}</svg></div>`;
+}
+
 const DAYS = [
  {d:'8/7', wk:'五', key:'DAY 01', title:'明洞快閃 · 靈魂音樂', sub:'抵達即開場：換錢補貨、脊骨湯暖胃,直衝梨泰院夜生活。',
   stops:[
@@ -521,23 +649,23 @@ const DAYS = [
 ];
 
 const PLACES = [
- {cat:'food', name:'廣藏市場', en:'Gwangjang Market', desc:'首爾最有生命力的傳統市場,綠豆煎餅、生牛肉、麻藥紫菜飯捲一路吃過去,是體驗庶民美食的第一站。', tip:'現煎的綠豆煎餅要趁熱吃,生牛肉(육회)配生蛋黃拌開最經典。', map:'광장시장'},
- {cat:'food', name:'元堂脊骨馬鈴薯湯', en:'Wondang Gamjatang', desc:'明洞的骨頭湯名店,湯頭濃郁、肉大塊,長途飛行後暖胃補元氣的首選。', tip:'把脊骨上的肉挑乾淨,再用湯泡飯,一鍋抵一餐。', map:'원당 감자탕 명동'},
- {cat:'food', name:'三代蔘雞匠人', en:'Samdae Samgyetang', desc:'整隻雞燉到軟爛的人蔘雞湯,肚裡塞著糯米,是韓國夏天「以熱補熱」的養生名物。', tip:'先喝原湯,再自行加鹽與胡椒調味。', map:'삼대삼계장인'},
- {cat:'food', name:'烤牛腸專賣', en:'Gopchang', desc:'奉天洞烤牛腸或明洞「王妃家」都以高品質牛腸聞名,現烤油脂香氣十足,配燒酒一流。', tip:'讓店員代烤火候最剛好,最後用剩油炒飯別錯過。', map:'봉천동 곱창'},
- {cat:'food', name:'강남면옥 江南麵屋', en:'Gangnam Myeonok', desc:'江南老字號,燉牛排骨(갈비찜)軟糯入味是招牌,平壤式冷麵清爽解暑。', tip:'兩人以上建議一份갈비찜配一份冷麵分著吃。', map:'강남면옥'},
- {cat:'food', name:'耕仁美術館 茶屋', en:'Gyeongin Tea House', desc:'仁寺洞巷弄裡的韓屋茶屋,老木結構圍出一方庭院,適合逛累後點壺傳統茶靜坐。', tip:'午後陽光斜進庭院時最美,是拍照與放空的好時段。', map:'경인미술관 전통다원'},
- {cat:'sight', name:'盤浦大橋月光彩虹噴泉', en:'Banpo Rainbow Fountain', desc:'世界最長的橋樑噴泉,夜間隨音樂噴出彩虹水幕,是漢江的招牌浪漫。', tip:'坐在盤浦漢江公園草地正對橋面欣賞,夏季通常一晚多場,傍晚後開始。', map:'반포대교 달빛무지개분수'},
- {cat:'sight', name:'星空圖書館', en:'Starfield Library', desc:'COEX Mall 中庭高達十幾公尺的巨型書牆,免費開放,是首爾最好拍的室內景點之一。', tip:'挑人少的上午去,退到二樓走廊可拍到整片書牆。', map:'별마당도서관 코엑스'},
- {cat:'sight', name:'奉恩寺', en:'Bongeunsa Temple', desc:'被江南摩天樓環抱的千年古剎,古今對比強烈,鬧中取靜。', tip:'免費入場,對面就是 COEX,可與星空圖書館串成半日行程。', map:'봉은사'},
- {cat:'sight', name:'DDP 東大門設計廣場', en:'Dongdaemun Design Plaza', desc:'Zaha Hadid 設計的銀色流線建築,白天是設計地標,入夜燈光更科幻,旁邊就是古城門興仁之門。', tip:'從 DDP 步行到興仁之門,可一次收進「未來與古城」的畫面。', map:'DDP 동대문디자인플라자'},
- {cat:'sight', name:'仁寺洞 · 三吉市場', en:'Insadong Ssamzigil', desc:'傳統與文創交會的老街,螺旋式建築 Ssamzigil 裡藏滿手作小店與咖啡館。', tip:'邊逛邊吃街邊小食,買點韓風紀念品很合適。', map:'쌈지길 인사동'},
- {cat:'night', name:'HYDE Seoul', en:'HYDE Bar', desc:'風格時尚的精緻酒吧,調酒細膩,適合當作夜生活的暖身第一攤。', tip:'早一點到座位較從容,先在這裡定調再前進梨泰院。', map:'HYDE bar Seoul'},
- {cat:'night', name:'Club GYM', en:'Club GYM Itaewon', desc:'梨泰院人氣俱樂部,音樂強、人潮旺,體驗首爾頂級夜生活的代表之一。', tip:'財物貼身、三人結伴,深夜離場用 Kakao T 叫車最安全。', map:'Club GYM Itaewon'},
- {cat:'night', name:'Bear Cave', en:'Bear Cave Itaewon', desc:'梨泰院一家帶有地下洞穴感的酒吧,氛圍獨特,很適合當整晚的固定據點。', tip:'人多時把手機訊號與集合點先講好。', map:'Bear Cave bar Itaewon'},
- {cat:'shop', name:'Olive Young 明洞', en:'Olive Young Myeongdong', desc:'韓國最大美妝連鎖,面膜、保養、彩妝、零食一站買齊,常有買一送一。', tip:'旗艦店品項最全,滿額可辦退稅,行李預留空間。', map:'올리브영 명동'},
- {cat:'shop', name:'樂天超市 首爾站', en:'Lotte Mart Seoul', desc:'伴手禮大本營:海苔、餅乾、泡麵、辛拉麵、燒酒一次補足。', tip:'週一晚人潮較少最好逛,結帳後可寄放或直接打包,帶個摺疊行李袋。', map:'롯데마트 서울역점'},
- {cat:'beauty', name:'수앤모 성형외과', en:'Su&Mo Clinic', desc:'江南美容診所,做臉部保養護理,三人約 2 小時完成,行程尾聲把狀態調到最好。', tip:'務必提前預約,建議出發前一週請飯店櫃台再幫忙確認一次。', map:'수앤모의원 강남'},
+ {cat:'food', art:'market', name:'廣藏市場', en:'Gwangjang Market', desc:'首爾最有生命力的傳統市場,綠豆煎餅、生牛肉、麻藥紫菜飯捲一路吃過去,是體驗庶民美食的第一站。', tip:'現煎的綠豆煎餅要趁熱吃,生牛肉(육회)配生蛋黃拌開最經典。', map:'광장시장'},
+ {cat:'food', art:'soup', name:'元堂脊骨馬鈴薯湯', en:'Wondang Gamjatang', desc:'明洞的骨頭湯名店,湯頭濃郁、肉大塊,長途飛行後暖胃補元氣的首選。', tip:'把脊骨上的肉挑乾淨,再用湯泡飯,一鍋抵一餐。', map:'원당 감자탕 명동'},
+ {cat:'food', art:'soup', name:'三代蔘雞匠人', en:'Samdae Samgyetang', desc:'整隻雞燉到軟爛的人蔘雞湯,肚裡塞著糯米,是韓國夏天「以熱補熱」的養生名物。', tip:'先喝原湯,再自行加鹽與胡椒調味。', map:'삼대삼계장인'},
+ {cat:'food', art:'grill', name:'烤牛腸專賣', en:'Gopchang', desc:'奉天洞烤牛腸或明洞「王妃家」都以高品質牛腸聞名,現烤油脂香氣十足,配燒酒一流。', tip:'讓店員代烤火候最剛好,最後用剩油炒飯別錯過。', map:'봉천동 곱창'},
+ {cat:'food', art:'noodle', name:'강남면옥 江南麵屋', en:'Gangnam Myeonok', desc:'江南老字號,燉牛排骨(갈비찜)軟糯入味是招牌,平壤式冷麵清爽解暑。', tip:'兩人以上建議一份갈비찜配一份冷麵分著吃。', map:'강남면옥'},
+ {cat:'food', art:'hanok', name:'耕仁美術館 茶屋', en:'Gyeongin Tea House', desc:'仁寺洞巷弄裡的韓屋茶屋,老木結構圍出一方庭院,適合逛累後點壺傳統茶靜坐。', tip:'午後陽光斜進庭院時最美,是拍照與放空的好時段。', map:'경인미술관 전통다원'},
+ {cat:'sight', art:'fountain', name:'盤浦大橋月光彩虹噴泉', en:'Banpo Rainbow Fountain', desc:'世界最長的橋樑噴泉,夜間隨音樂噴出彩虹水幕,是漢江的招牌浪漫。', tip:'坐在盤浦漢江公園草地正對橋面欣賞,夏季通常一晚多場,傍晚後開始。', map:'반포대교 달빛무지개분수'},
+ {cat:'sight', art:'books', name:'星空圖書館', en:'Starfield Library', desc:'COEX Mall 中庭高達十幾公尺的巨型書牆,免費開放,是首爾最好拍的室內景點之一。', tip:'挑人少的上午去,退到二樓走廊可拍到整片書牆。', map:'별마당도서관 코엑스'},
+ {cat:'sight', art:'temple', name:'奉恩寺', en:'Bongeunsa Temple', desc:'被江南摩天樓環抱的千年古剎,古今對比強烈,鬧中取靜。', tip:'免費入場,對面就是 COEX,可與星空圖書館串成半日行程。', map:'봉은사'},
+ {cat:'sight', art:'ddp', name:'DDP 東大門設計廣場', en:'Dongdaemun Design Plaza', desc:'Zaha Hadid 設計的銀色流線建築,白天是設計地標,入夜燈光更科幻,旁邊就是古城門興仁之門。', tip:'從 DDP 步行到興仁之門,可一次收進「未來與古城」的畫面。', map:'DDP 동대문디자인플라자'},
+ {cat:'sight', art:'lantern', name:'仁寺洞 · 三吉市場', en:'Insadong Ssamzigil', desc:'傳統與文創交會的老街,螺旋式建築 Ssamzigil 裡藏滿手作小店與咖啡館。', tip:'邊逛邊吃街邊小食,買點韓風紀念品很合適。', map:'쌈지길 인사동'},
+ {cat:'night', art:'neon', name:'HYDE Seoul', en:'HYDE Bar', desc:'風格時尚的精緻酒吧,調酒細膩,適合當作夜生活的暖身第一攤。', tip:'早一點到座位較從容,先在這裡定調再前進梨泰院。', map:'HYDE bar Seoul'},
+ {cat:'night', art:'club', name:'Club GYM', en:'Club GYM Itaewon', desc:'梨泰院人氣俱樂部,音樂強、人潮旺,體驗首爾頂級夜生活的代表之一。', tip:'財物貼身、三人結伴,深夜離場用 Kakao T 叫車最安全。', map:'Club GYM Itaewon'},
+ {cat:'night', art:'cave', name:'Bear Cave', en:'Bear Cave Itaewon', desc:'梨泰院一家帶有地下洞穴感的酒吧,氛圍獨特,很適合當整晚的固定據點。', tip:'人多時把手機訊號與集合點先講好。', map:'Bear Cave bar Itaewon'},
+ {cat:'shop', art:'beauty', name:'Olive Young 明洞', en:'Olive Young Myeongdong', desc:'韓國最大美妝連鎖,面膜、保養、彩妝、零食一站買齊,常有買一送一。', tip:'旗艦店品項最全,滿額可辦退稅,行李預留空間。', map:'올리브영 명동'},
+ {cat:'shop', art:'cart', name:'樂天超市 首爾站', en:'Lotte Mart Seoul', desc:'伴手禮大本營:海苔、餅乾、泡麵、辛拉麵、燒酒一次補足。', tip:'週一晚人潮較少最好逛,結帳後可寄放或直接打包,帶個摺疊行李袋。', map:'롯데마트 서울역점'},
+ {cat:'beauty', art:'clinic', name:'수앤모 성형외과', en:'Su&Mo Clinic', desc:'江南美容診所,做臉部保養護理,三人約 2 小時完成,行程尾聲把狀態調到最好。', tip:'務必提前預約,建議出發前一週請飯店櫃台再幫忙確認一次。', map:'수앤모의원 강남'},
 ];
 
 const TIPS = [
@@ -720,6 +848,7 @@ function renderGuide(){
   document.getElementById('guideList').innerHTML=list.map(p=>{
     const c=CATS[p.cat];
     return `<div class="place card ${c.cls}" style="--c:${c.color}">
+      ${artBanner(p.art)}
       <div class="place-top">
         <div>
           <div class="place-name">${p.name}</div>
