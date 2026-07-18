@@ -91,6 +91,23 @@ nav{
 .day-btn.active .db-d{color:#b9c2ff}
 .day-btn.active .db-n{color:#fff}
 
+/* Today hero card */
+.today{position:relative;overflow:hidden;background:var(--ink);color:#fff;border-radius:18px;padding:17px 18px;margin-top:14px;box-shadow:var(--sh2)}
+.today.tappable{cursor:pointer}
+.today .td-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8fa0f5;font-weight:700}
+.today .td-big{font-family:var(--disp);font-weight:900;font-size:34px;letter-spacing:-.01em;line-height:1.1;margin-top:4px}
+.today .td-big small{font-size:16px;font-family:var(--sans);font-weight:700;color:#c8cdd8;margin-left:2px}
+.today .td-sub{font-size:13px;color:#aab0bc;margin-top:6px;line-height:1.5;position:relative;z-index:2}
+.today .td-next{display:flex;align-items:center;gap:9px;margin-top:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;position:relative;z-index:2}
+.today .td-next .tn-time{font-family:var(--mono);font-weight:700;font-size:13px;color:#8fa0f5;flex:none}
+.today .td-next .tn-body{min-width:0}
+.today .td-next .tn-title{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.today .td-next .tn-eta{font-size:11.5px;color:#aab0bc;margin-top:1px}
+.today .td-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:#41d99c;margin-right:6px;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.today .td-motif{position:absolute;right:14px;top:50%;transform:translateY(-50%);opacity:.16;z-index:1}
+@media(prefers-reduced-motion:reduce){.today .td-live{animation:none}}
+
 .day-head{margin:18px 2px 6px}
 .day-head .dh-k{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cobalt);font-weight:700;text-transform:uppercase}
 .day-head .dh-t{font-family:var(--disp);font-weight:900;font-size:23px;letter-spacing:-.01em;margin-top:1px}
@@ -258,6 +275,7 @@ nav{
 
   <!-- ===== ITINERARY ===== -->
   <section id="v-itin" class="view active">
+    <div id="todayCard"></div>
     <div class="day-switch" id="daySwitch"></div>
     <div id="dayContent"></div>
   </section>
@@ -505,8 +523,89 @@ let rate    = LS.read('sm_rate', {krwToTwd:0.0234, time:null});  // 1 KRW = x TW
 let settleCur = LS.read('sm_settle','KRW'); // settlement currency for split view
 
 /* ============================================================
-   TABS
+   TODAY CARD
    ============================================================ */
+const TRIP_START = new Date(2026,7,7);   // 2026-08-07
+const TRIP_DAYS  = 5;
+const MOTIF = `<svg class="td-motif" width="54" height="96" viewBox="0 0 54 96" fill="none">
+  <line x1="27" y1="10" x2="27" y2="86" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="27" cy="12" r="9" fill="#15171C" stroke="#fff" stroke-width="5"/>
+  <circle cx="27" cy="48" r="8" fill="#EA4E27"/>
+  <circle cx="27" cy="84" r="9" fill="#15171C" stroke="#fff" stroke-width="5"/>
+</svg>`;
+
+function tripDayIndex(){
+  const now = new Date();
+  let today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let nm = now.getHours()*60 + now.getMinutes();
+  // Before 06:00 counts as the previous day's night (club stops run past midnight)
+  if (now.getHours() < 6){ today0 = new Date(today0 - 86400000); nm += 1440; }
+  const diff = Math.round((today0 - TRIP_START) / 86400000);
+  return {diff, nm};
+}
+function renderToday(){
+  const el = document.getElementById('todayCard');
+  const {diff, nm} = tripDayIndex();
+
+  if (diff < 0){ // ----- before the trip: countdown -----
+    const n = -diff;
+    el.innerHTML = `<div class="today">${MOTIF}
+      <div class="td-eyebrow">COUNTDOWN · GMP 12:50</div>
+      <div class="td-big">出發倒數 ${n}<small> 天</small></div>
+      <div class="td-sub">8/7(五)12:50 抵達金浦機場。行前記得:換錢規劃、確認美容診所與餐廳預約、下載 Kakao T 與 Naver Map。</div>
+    </div>`;
+    return;
+  }
+
+  if (diff < TRIP_DAYS){ // ----- during the trip -----
+    const d = DAYS[diff];
+    const parse = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+    const stops2 = d.stops.map(s=>{
+      let sm = parse(s.t); if (sm < 360) sm += 1440;
+      let em = s.end ? parse(s.end) : sm + 60; if (em <= sm) em += 1440;
+      return {...s, sm, em};
+    });
+    const ongoing = stops2.find(s => nm >= s.sm && nm < s.em);
+    const next    = stops2.find(s => s.sm > nm);
+    let inner = '';
+    if (ongoing){
+      inner += `<div class="td-next"><span class="tn-time">NOW</span>
+        <div class="tn-body"><div class="tn-title"><span class="td-live"></span>${ongoing.title}</div>
+        <div class="tn-eta">進行中 · ${ongoing.place}</div></div></div>`;
+    }
+    if (next){
+      const rem = next.sm - nm;
+      const eta = rem >= 60 ? `${Math.floor(rem/60)} 小時 ${rem%60 ? rem%60+' 分' : ''}` : `${rem} 分鐘`;
+      inner += `<div class="td-next"><span class="tn-time">${next.t}</span>
+        <div class="tn-body"><div class="tn-title">${next.title}</div>
+        <div class="tn-eta">還有約 ${eta} · ${next.place}</div></div></div>`;
+    }
+    if (!ongoing && !next){
+      inner = `<div class="td-sub" style="margin-top:10px">今日行程都完成了,好好休息,明天見 ✦</div>`;
+    }
+    el.innerHTML = `<div class="today tappable" id="todayJump">${MOTIF}
+      <div class="td-eyebrow">${d.key} · ${d.d}(${d.wk})</div>
+      <div class="td-big">${d.title}</div>
+      ${inner}
+    </div>`;
+    const jump = document.getElementById('todayJump');
+    if (jump) jump.addEventListener('click', ()=>{
+      curDay = diff; renderDaySwitch(); renderDay();
+      document.getElementById('dayContent').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    return;
+  }
+
+  // ----- after the trip -----
+  const n = expenses.length;
+  el.innerHTML = `<div class="today">${MOTIF}
+    <div class="td-eyebrow">TRIP COMPLETE</div>
+    <div class="td-big">首爾,下次見 ✦</div>
+    <div class="td-sub">5 天的旅程結束了。${n ? `還有 ${n} 筆共同開銷,記得到「分帳」頁結清。` : '帳目都清了,期待下一趟!'}</div>
+  </div>`;
+}
+
+
 const views = document.querySelectorAll('.view');
 const tabs  = document.querySelectorAll('.tab');
 tabs.forEach(tab=>tab.addEventListener('click',()=>{
@@ -854,6 +953,8 @@ function toast(msg){
 /* ============================================================
    INIT
    ============================================================ */
+(function(){ const {diff} = tripDayIndex(); if (diff >= 0 && diff < TRIP_DAYS) curDay = diff; })();
+renderToday();
 renderDaySwitch(); renderDay();
 renderGuideFilters(); renderGuide();
 renderTips();
